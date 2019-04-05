@@ -125,6 +125,10 @@ void read_config_file (void)
 	FILE *fp;
 	char str[256];
 	
+	// Defaults
+
+	wireframe = 1;
+
 	fp = fopen ("newkind.cfg", "r");
 	if (fp == NULL)
 		return;

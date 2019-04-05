@@ -29,6 +29,10 @@
 #include "allegro5/allegro.h"
 #include <allegro5/allegro_font.h>
 
+#include "allegro5/allegro_image.h"
+#include "allegro5/allegro_native_dialog.h"
+#include <allegro5/allegro_primitives.h>
+
 #include "config.h"
 #include "gfx.h"
 #include "main.h"
@@ -67,6 +71,16 @@ int have_joystick;
 
 int find_input;
 char find_name[20];
+
+ALLEGRO_DISPLAY* display;
+ALLEGRO_BITMAP* image;
+
+ALLEGRO_FONT* font = NULL;
+ALLEGRO_TIMER* timer = NULL;
+ALLEGRO_EVENT_QUEUE* queue = NULL;
+ALLEGRO_EVENT event;
+
+
 
 
 
@@ -169,10 +183,10 @@ void draw_cross (int cx, int cy)
 	if (current_screen == SCR_SHORT_RANGE)
 	{
 		gfx_set_clip_region (1, 37, 510, 339);
-		xor_mode (true);
+		//xor_mode (true);
 		gfx_draw_colour_line (cx - 16, cy, cx + 16, cy, GFX_COL_RED);
 		gfx_draw_colour_line (cx, cy - 16, cx, cy + 16, GFX_COL_RED);
-		xor_mode (false);
+		//xor_mode (false);
 		gfx_set_clip_region (1, 1, 510, 383);
 		return;
 	}
@@ -180,10 +194,10 @@ void draw_cross (int cx, int cy)
 	if (current_screen == SCR_GALACTIC_CHART)
 	{
 		gfx_set_clip_region (1, 37, 510, 293);
-		xor_mode (true);
+		//xor_mode (true);
 		gfx_draw_colour_line (cx - 8, cy, cx + 8, cy, GFX_COL_RED);
 		gfx_draw_colour_line (cx, cy - 8, cx, cy + 8, GFX_COL_RED);
-		xor_mode (false);
+		//xor_mode (false);
 		gfx_set_clip_region (1, 1, 510, 383);
 	}
 }
@@ -682,8 +696,8 @@ void run_escape_sequence (void)
 	abandon_ship();
 }
 
-
-void handle_flight_keys (void)
+// Updated version to use the keycode that was passed down - all converted to ALLEGRO key codes
+void handle_flight_keys (int keyCode)
 {
     int keyasc;
 	
@@ -984,13 +998,20 @@ void handle_flight_keys (void)
 }
 
 
+//TODO Commander stuff outstanding
+
 
 void set_commander_name (char *path)
 {
 	char *fname, *cname;
 	int i;
+	char newname[1024];
 	
-	fname = get_filename (path);
+	//fname = get_filename (path);
+	fname = strcpy(newname, path);
+	fname = strcat(newname, "\\");
+	fname = strcat(newname, "elite.nkc");
+	
 	cname = cmdr.name;
 
 	for (i = 0; i < 31; i++)
@@ -1007,6 +1028,7 @@ void set_commander_name (char *path)
 
 void save_commander_screen (void)
 {
+	/*
 	char path[255];
 	int okay;
 	int rv;
@@ -1043,6 +1065,7 @@ void save_commander_screen (void)
 	saved_cmdr = cmdr;
 	saved_cmdr.ship_x = docked_planet.d;
 	saved_cmdr.ship_y = docked_planet.b;
+	*/
 }
 
 
@@ -1050,6 +1073,7 @@ void load_commander_screen (void)
 {
 	char path[255];
 	int rv;
+	/*
 
 	gfx_clear_display();
 	gfx_display_centre_text (10, "LOAD COMMANDER", 140, GFX_COL_GOLD);
@@ -1080,6 +1104,7 @@ void load_commander_screen (void)
 	set_commander_name (path);
 	saved_cmdr = cmdr;
 	update_console();
+	*/
 }
 
 
@@ -1091,14 +1116,47 @@ void run_first_intro_screen (void)
 	snd_play_midi (SND_ELITE_THEME, true);
 
 	initialise_intro1();
+	bool redraw = false;
 
 	for (;;)
 	{
-		update_intro1();
+		
+		//gfx_update_screen();
+		
+		redraw = false;
+		al_wait_for_event(queue, &event);
 
-		gfx_update_screen();
+		if (event.type == ALLEGRO_EVENT_TIMER) {
+			//printf("Timer Event\n");
+			redraw = true;
+		}
 
-		kbd_poll_keyboard();
+		if ((event.type == ALLEGRO_EVENT_KEY_DOWN))
+		{
+			printf("%d\n", event.keyboard.keycode);
+			redraw = false;
+			//break;
+		}
+
+		// Only redraw if the event queue is empty - otherwise keystrokes will force a redraw and fuck up the timing
+		if (redraw && al_is_event_queue_empty(queue))
+		{
+			//printf("Redraw Event\n");
+			// Clear target bitmap - but clear only clipping window 
+			//al_clear_to_color(al_map_rgb(0, 0, 0));
+			update_intro1();
+			
+			//al_draw_text(font, al_map_rgb(255, 255, 255), 0, 0, 0, "Hello world!");
+			al_flip_display();
+
+			redraw = false;
+			
+		}
+
+
+		//kbd_poll_keyboard();
+
+		/*
 
 		if (kbd_y_pressed)
 		{
@@ -1112,6 +1170,7 @@ void run_first_intro_screen (void)
 			snd_stop_midi();	
 			break;
 		}
+		*/
 	} 
 
 }
@@ -1232,33 +1291,62 @@ void info_message (char *message)
 //	snd_play_sample (SND_BEEP);
 }
 
-
-
-
-
-
-void initialise_allegro (void)
+// Main init of the system
+int initialise_allegro (void)
 {
 	
-	al_init();
+	if (!al_init()) {
+		al_show_native_message_box(display, "Error", "Error", "Failed to initialize allegro!",
+			NULL, ALLEGRO_MESSAGEBOX_ERROR);
+		return 0;
+	}
+
+	display = al_create_display(800, 600);
+
+	if (!display) {
+		al_show_native_message_box(display, "Error", "Error", "Failed to initialize display!",
+			NULL, ALLEGRO_MESSAGEBOX_ERROR);
+		return 0;
+	}
+
+
 	al_install_keyboard();
 	al_install_mouse();
+	
+	if (!al_init_image_addon()) {
+		al_show_native_message_box(display, "Error", "Error", "Failed to initialize al_init_image_addon!",
+			NULL, ALLEGRO_MESSAGEBOX_ERROR);
+		return 0;
+	}
 
-	ALLEGRO_TIMER* timer = al_create_timer(1.0 / 30.0);
-	ALLEGRO_EVENT_QUEUE * queue = al_create_event_queue();
-	ALLEGRO_DISPLAY * disp = al_create_display(320, 200);
-	ALLEGRO_FONT * font = al_create_builtin_font();
+	if (!al_init_primitives_addon()) {
+		al_show_native_message_box(display, "Error", "Error", "Failed to initialize al_init_primitives_addon!",
+			NULL, ALLEGRO_MESSAGEBOX_ERROR);
+		return 0;
+	}
 
-	al_register_event_source(queue, al_get_keyboard_event_source());
-	al_register_event_source(queue, al_get_display_event_source(disp));
-	al_register_event_source(queue, al_get_timer_event_source(timer));
+	ALLEGRO_FONT* font = al_create_builtin_font();
 
-	//allegro_init();
-	//install_keyboard(); 
-	//install_timer();
-	//install_mouse();
+	/*
+	image = al_load_bitmap("D:/cloud/gdrive/GDevelopment/Elite/Debug/blake.bmp");
 
+	if (!image) {
+		al_show_native_message_box(display, "Error", "Error", "Failed to load image!",
+			NULL, ALLEGRO_MESSAGEBOX_ERROR);
+		al_destroy_display(display);
+		return 0;
+	}
+	*/
+
+	//al_draw_line(0.0, 0.0, 100.1, 100.1, al_map_rgb(255, 0, 0), 5.0);
+	//al_draw_line(0.0, 0.0, 100.1, 100.1, al_map_rgb(255, 0, 0), 5.0);
+	
+	//al_draw_bitmap(image, 200, 200, 0);
+
+	//al_flip_display();
+	
 	have_joystick = 0;
+	
 	/*
 	if (install_joystick(JOY_TYPE_AUTODETECT) == 0)
 	{
@@ -1268,25 +1356,43 @@ void initialise_allegro (void)
 }
 
 
+/*
+	Main entry point
+*/
+int main(int argc, char** argv) 
 
-int main()
 {
+	
 	initialise_allegro();
+	
 	read_config_file();
-
+		
+	// Load bitmaps
 	if (gfx_graphics_startup() == 1)
 	{
 		return 1;
 	}
 	
+	
 	/* Start the sound system... */
-	snd_sound_startup();
+	//snd_sound_startup();
 
 	/* Do any setup necessary for the keyboard... */
-	kbd_keyboard_startup();
+	//kbd_keyboard_startup();
 	
 	finish = 0;
 	auto_pilot = 0;
+
+	timer = al_create_timer(1.0 / 30.0);
+	queue = al_create_event_queue();
+
+
+	al_register_event_source(queue, al_get_keyboard_event_source());
+	al_register_event_source(queue, al_get_display_event_source(display));
+	al_register_event_source(queue, al_get_timer_event_source(timer));
+
+	al_start_timer(timer);
+
 	
 	while (!finish)
 	{
@@ -1305,18 +1411,43 @@ int main()
 
 		dock_player ();
 		display_commander_status ();
+
+		bool redraw = true;
 		
 		while (!game_over)
 		{
-			snd_update_sound();
-			gfx_update_screen();
+			//snd_update_sound();
+			//gfx_update_screen();
+			
+			// TODO - need to put this into some kind of size thing
 			gfx_set_clip_region (1, 1, 510, 383);
 
 			rolling = 0;
 			climbing = 0;
 
-			handle_flight_keys ();
+			al_wait_for_event(queue, &event);
 
+			if (event.type == ALLEGRO_EVENT_TIMER) {
+				redraw = true;
+			}
+			else if ((event.type == ALLEGRO_EVENT_KEY_DOWN) || (event.type == ALLEGRO_EVENT_DISPLAY_CLOSE))
+			{
+				printf("%d\n", event.keyboard.keycode);
+				handle_flight_keys(event.keyboard.keycode);
+				//break;
+			}
+
+			if (redraw && al_is_event_queue_empty(queue))
+			{
+				al_clear_to_color(al_map_rgb(0, 0, 0));
+				//al_draw_text(font, al_map_rgb(255, 255, 255), 0, 0, 0, "Hello world!");
+				al_flip_display();
+
+				redraw = false;
+				//gfx_update_screen();
+			}
+
+						
 			if (game_paused)
 				continue;
 				
@@ -1463,4 +1594,4 @@ int main()
 	return 0;
 }
 
-END_OF_MAIN();
+//END_OF_MAIN();

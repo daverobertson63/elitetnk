@@ -24,6 +24,13 @@
  
 #include <stdlib.h>
 
+#include "allegro5/allegro.h"
+#include <allegro5/allegro_font.h>
+
+#include "allegro5/allegro_image.h"
+#include "allegro5/allegro_native_dialog.h"
+#include <allegro5/allegro_primitives.h>
+
 #include "config.h"
 #include "elite.h"
 #include "gfx.h"
@@ -38,6 +45,8 @@ static int ship_no;
 static int show_time;
 static int direction;
 
+extern ALLEGRO_DISPLAY* display;
+extern ALLEGRO_BITMAP* image;
 
 static int min_dist[NO_OF_SHIPS+1] = {0, 200, 800, 200,   200, 200, 300, 384,   200,
 								  200, 200, 420, 900, 500, 800, 384, 384,
@@ -81,13 +90,14 @@ void update_intro1 (void)
 	gfx_clear_display();
 
 	flight_roll = 1;
+
 	update_universe();
 	
 	gfx_draw_sprite(IMG_ELITE_TXT, -1, 10);
 
-	gfx_display_centre_text (310, "Original Game (C) I.Bell & D.Braben.", 120, GFX_COL_WHITE);
-	gfx_display_centre_text (330, "Re-engineered by C.J.Pinder.", 120, GFX_COL_WHITE);
-	gfx_display_centre_text (360, "Load New Commander (Y/N)?", 140, GFX_COL_GOLD);
+	//gfx_display_centre_text (310, "Original Game (C) I.Bell & D.Braben.", 120, GFX_COL_WHITE);
+	//gfx_display_centre_text (330, "Re-engineered by C.J.Pinder.", 120, GFX_COL_WHITE);
+	//gfx_display_centre_text (360, "Load New Commander (Y/N)?", 140, GFX_COL_GOLD);
 }
 
 

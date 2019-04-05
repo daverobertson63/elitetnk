@@ -317,7 +317,10 @@ void draw_solid_ship (struct univ_object *univ)
 			}
 			
 
-			gfx_render_polygon (face_data[i].points, poly_list, face_data[i].colour, zavg);
+			//gfx_render_polygon (face_data[i].points, poly_list, face_data[i].colour, zavg);
+			printf("Polygon %d\n", num_points);
+			gfx_polygon(num_points, poly_list, 138);
+			
 			
 		}
 	}
@@ -1004,10 +1007,17 @@ void draw_ship (struct univ_object *ship)
 	if ((fabs(ship->location.x) > ship->location.z) ||	/* Check for field of vision. */
 		(fabs(ship->location.y) > ship->location.z))
 		return;
-		
-	if (wireframe)
-		draw_wireframe_ship (ship);
+	
+	
+	if (wireframe) {
+		//draw_wireframe_ship(ship);
+		draw_solid_ship(ship);
+	}
 	else
-		draw_solid_ship (ship);
+	{
+		draw_solid_ship(ship);
+	}
+
+		
 }
 

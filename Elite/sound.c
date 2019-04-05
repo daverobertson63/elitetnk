@@ -96,7 +96,7 @@ void snd_sound_shutdown (void)
 	{
 		if (sample_list[i].sample != NULL)
 		{
-			destroy_sample (sample_list[i].sample);
+			//destroy_sample (sample_list[i].sample);
 			sample_list[i].sample = NULL;
 		}
 	}
@@ -113,7 +113,7 @@ void snd_play_sample (int sample_no)
 
 	sample_list[sample_no].timeleft = sample_list[sample_no].runtime;
 		
-	play_sample (sample_list[sample_no].sample, 255, 128, 1000, false);
+	//play_sample (sample_list[sample_no].sample, 255, 128, 1000, false);
 }
 
 
@@ -150,5 +150,5 @@ void snd_play_midi (int midi_no, int repeat)
 void snd_stop_midi (void)
 {
 	if (sound_on);
-		play_midi (NULL, true);
+	//	play_midi (NULL, true);
 }

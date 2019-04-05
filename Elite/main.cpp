@@ -1,7 +1,7 @@
 #include <allegro5/allegro5.h>
 #include <allegro5/allegro_font.h>
 
-int main()
+int main2()
 {
 	al_init();
 	al_install_keyboard();
@@ -18,7 +18,7 @@ int main()
 	bool redraw = true;
 	ALLEGRO_EVENT event;
 
-	al_start_timer(timer);
+	// al_start_timer(timer);
 	while (1)
 	{
 		al_wait_for_event(queue, &event);

@@ -160,6 +160,7 @@
     <ClCompile Include="shipdata.c" />
     <ClCompile Include="shipface.c" />
     <ClCompile Include="sound.c" />
+    <ClCompile Include="eliteMain.cpp" />
     <ClCompile Include="space.c" />
     <ClCompile Include="stars.c" />
     <ClCompile Include="swat.c" />

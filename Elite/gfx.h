@@ -72,24 +72,24 @@
 #endif
  
 /*
-// "aliceblue", "antiquewhite", "aqua", "aquamarine", "azure", "beige", "bisque", "black", "blanchedalmond", blue, blueviolet, brown, burlywood, cadetblue, chartreuse, chocolate, coral, cornflowerblue, cornsilk, crimson, cyan, darkblue, darkcyan, darkgoldenrod, darkgray, darkgreen, darkkhaki, darkmagenta, darkolivegreen, darkorange, darkorchid, darkred, darksalmon, darkseagreen, darkslateblue, darkslategray, darkturquoise, darkviolet, deeppink, deepskyblue, dimgray, dodgerblue, firebrick, floralwhite, forestgreen, fuchsia, gainsboro, ghostwhite, goldenrod, gold, gray, green, greenyellow, honeydew, hotpink, indianred, indigo, ivory, khaki, lavenderblush, lavender, lawngreen, lemonchiffon, lightblue, lightcoral, lightcyan, lightgoldenrodyellow, lightgreen, lightgrey, lightpink, lightsalmon, lightseagreen, lightskyblue, lightslategray, lightsteelblue, lightyellow, lime, limegreen, linen, magenta, maroon, mediumaquamarine, mediumblue, mediumorchid, mediumpurple, mediumseagreen, mediumslateblue, mediumspringgreen, mediumturquoise, mediumvioletred, midnightblue, mintcream, mistyrose, moccasin, avajowhite, navy, oldlace, olive, olivedrab, orange, orangered, orchid, palegoldenrod, palegreen, paleturquoise, palevioletred, papayawhip, peachpuff, peru, pink, plum, powderblue, purple, purwablue, red, rosybrown, royalblue, saddlebrown, salmon, sandybrown, seagreen, seashell, sienna, silver, skyblue, slateblue, slategray, snow, springgreen, steelblue, tan, teal, thistle, tomato, turquoise, violet, wheat, white, whitesmoke, yellow, yellowgreen
+// "aliceblue", "antiquewhite", "aqua", "aquamarine", "azure", "beige", "bisque", "black", "blanchedalmond", "blue", "blueviolet", "brown", "burlywood", "cadetblue", "chartreuse", 
+"chocolate", "coral", "cornflowerblue", "cornsilk", "crimson", "cyan", "darkblue", "darkcyan", "darkgoldenrod", "darkgray", "darkgreen", "darkkhaki", "darkmagenta", "darkolivegreen", "darkorange", "darkorchid", darkred, darksalmon, darkseagreen, darkslateblue, darkslategray, darkturquoise, darkviolet, deeppink, deepskyblue, dimgray, dodgerblue, firebrick, floralwhite, forestgreen, fuchsia, gainsboro, ghostwhite, goldenrod, gold, gray, green, greenyellow, honeydew, hotpink, indianred, indigo, ivory, khaki, lavenderblush, lavender, lawngreen, lemonchiffon, lightblue, lightcoral, lightcyan, lightgoldenrodyellow, lightgreen, lightgrey, lightpink, lightsalmon, lightseagreen, lightskyblue, lightslategray, lightsteelblue, lightyellow, lime, limegreen, linen, magenta, maroon, mediumaquamarine, mediumblue, mediumorchid, mediumpurple, mediumseagreen, mediumslateblue, mediumspringgreen, mediumturquoise, mediumvioletred, midnightblue, mintcream, mistyrose, moccasin, avajowhite, navy, oldlace, olive, olivedrab, orange, orangered, orchid, palegoldenrod, palegreen, paleturquoise, palevioletred, papayawhip, peachpuff, peru, pink, plum, powderblue, purple, purwablue, red, rosybrown, royalblue, saddlebrown, salmon, sandybrown, seagreen, seashell, sienna, silver, skyblue, slateblue, slategray, snow, springgreen, steelblue, tan, teal, thistle, tomato, turquoise, violet, wheat, white, whitesmoke, yellow, yellowgreen
 */
 
+extern char* EliteColors[141];
 
-char* colors[20] = {  };
-
-
+// This is a kind of palette mapping - use the indexes in the existing A4 lib calls
 #define GFX_COL_BLACK		7
 #define GFX_COL_DARK_RED	28
-#define GFX_COL_WHITE		255
+#define GFX_COL_WHITE		138
 #define GFX_COL_GOLD		39
 #define GFX_COL_RED			49
 #define GFX_COL_CYAN		11
 
-#define GFX_COL_GREY_1		248
-#define GFX_COL_GREY_2		235
-#define GFX_COL_GREY_3		234
-#define GFX_COL_GREY_4		237
+#define GFX_COL_GREY_1		138
+#define GFX_COL_GREY_2		138
+#define GFX_COL_GREY_3		138
+#define GFX_COL_GREY_4		138
 
 #define GFX_COL_BLUE_1		45
 #define GFX_COL_BLUE_2		46
@@ -99,13 +99,13 @@ char* colors[20] = {  };
 #define GFX_COL_RED_3		1
 #define GFX_COL_RED_4		71
 
-#define GFX_COL_WHITE_2		242
+#define GFX_COL_WHITE_2		138
 
 #define GFX_COL_YELLOW_1	37
 #define GFX_COL_YELLOW_2	39
 #define GFX_COL_YELLOW_3	89
-#define GFX_COL_YELLOW_4	160
-#define GFX_COL_YELLOW_5	251
+#define GFX_COL_YELLOW_4	138
+#define GFX_COL_YELLOW_5	138
 
 #define GFX_ORANGE_1		76
 #define GFX_ORANGE_2		77
@@ -115,7 +115,7 @@ char* colors[20] = {  };
 #define GFX_COL_GREEN_2		17
 #define GFX_COL_GREEN_3		86
 
-#define GFX_COL_PINK_1		183
+#define GFX_COL_PINK_1		138
 
 #define IMG_GREEN_DOT		1
 #define IMG_RED_DOT			2
