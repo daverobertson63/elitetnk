@@ -32,6 +32,8 @@
 #include "allegro5/allegro_image.h"
 #include "allegro5/allegro_native_dialog.h"
 #include <allegro5/allegro_primitives.h>
+#include <allegro5/allegro_font.h>
+#include <allegro5/allegro_ttf.h>
 
 #include "config.h"
 #include "gfx.h"
@@ -75,13 +77,17 @@ char find_name[20];
 ALLEGRO_DISPLAY* display;
 ALLEGRO_BITMAP* image;
 
-ALLEGRO_FONT* font = NULL;
 ALLEGRO_TIMER* timer = NULL;
 ALLEGRO_EVENT_QUEUE* queue = NULL;
 ALLEGRO_EVENT event;
 
+// Font defs - we have our own ttf BTW
+ALLEGRO_FONT* font = NULL;
+ALLEGRO_FONT* _Font_ELITE_1;
+ALLEGRO_FONT* _Font_ELITE_2;
+ALLEGRO_FONT* _Font_ELITE_3;
 
-
+extern ALLEGRO_BITMAP* scanner_image;
 
 
 /*
@@ -508,7 +514,7 @@ void add_find_char (int letter)
 	str[1] = '\0';
 	strcat (find_name, str);
 
-	sprintf (str, "Planet Name? %s", find_name);		
+	sprintf_s (str, "Planet Name? %s", find_name);		
 	gfx_clear_text_area ();
 	gfx_display_text(16, 340, str);
 }
@@ -701,14 +707,16 @@ void handle_flight_keys (int keyCode)
 {
     int keyasc;
 	
-	if (docked &&
-	    ((current_screen == SCR_MARKET_PRICES) ||
-		 (current_screen == SCR_OPTIONS) ||
-		 (current_screen == SCR_SETTINGS) ||
-		 (current_screen == SCR_EQUIP_SHIP)))
-		kbd_read_key();
+	if (docked && ((current_screen == SCR_MARKET_PRICES) ||
+		(current_screen == SCR_OPTIONS) ||
+			(current_screen == SCR_SETTINGS) ||
+			(current_screen == SCR_EQUIP_SHIP))) {
 
-	kbd_poll_keyboard();
+		kbd_read_key();
+	}
+
+	// Check to see which keys have been pressed
+	kbd_poll_keyboard(keyCode);
 
 	/*
 	if (have_joystick)
@@ -744,6 +752,7 @@ void handle_flight_keys (int keyCode)
 	{
 		if (kbd_resume_pressed)
 			game_paused = 0;
+
 		return;
 	}
 		
@@ -952,7 +961,7 @@ void handle_flight_keys (int keyCode)
 	{
 		if (!docked)
 		{
-			if (flight_speed < myship.max_speed)
+     			if (flight_speed < myship.max_speed)
 				flight_speed++;
 		}
 	}
@@ -1134,8 +1143,25 @@ void run_first_intro_screen (void)
 		if ((event.type == ALLEGRO_EVENT_KEY_DOWN))
 		{
 			printf("%d\n", event.keyboard.keycode);
+			
+			kbd_poll_keyboard(event.keyboard.keycode);
+
+			// Load the command screen - get a config file!
+			if (kbd_y_pressed)
+			{
+				snd_stop_midi();
+				load_commander_screen();
+				break;
+			}
+			// Just play from scratch I think - exciting like it was 1984....
+			if (kbd_n_pressed)
+			{
+				snd_stop_midi();
+				break;
+			}
+
 			redraw = false;
-			//break;
+			
 		}
 
 		// Only redraw if the event queue is empty - otherwise keystrokes will force a redraw and fuck up the timing
@@ -1153,24 +1179,6 @@ void run_first_intro_screen (void)
 			
 		}
 
-
-		//kbd_poll_keyboard();
-
-		/*
-
-		if (kbd_y_pressed)
-		{
-			snd_stop_midi();	
-			load_commander_screen();
-			break;
-		}
-		
-		if (kbd_n_pressed)
-		{ 
-			snd_stop_midi();	
-			break;
-		}
-		*/
 	} 
 
 }
@@ -1189,6 +1197,58 @@ void run_second_intro_screen (void)
 	flight_roll = 0;
 	flight_climb = 0;
 
+	bool redraw = false;
+
+	for (;;)
+	{
+
+		//gfx_update_screen();
+
+		redraw = false;
+		al_wait_for_event(queue, &event);
+
+		
+
+		if (event.type == ALLEGRO_EVENT_TIMER) {
+			redraw = true;
+		}
+		else
+		{
+			printf("Evnt %d\n", event.type);
+		}
+
+		if ((event.type == ALLEGRO_EVENT_KEY_CHAR))
+		{
+			printf("%d\n", event.keyboard.keycode);
+
+			kbd_poll_keyboard(event.keyboard.keycode);
+
+			if (kbd_space_pressed)
+			{
+				snd_stop_midi();
+				break;
+			}
+
+			redraw = false;
+
+		}
+
+		// Only redraw if the event queue is empty - otherwise keystrokes will force a redraw and fuck up the timing
+		if (redraw && al_is_event_queue_empty(queue))
+		{
+			//printf("Redraw Event\n");
+			// Clear target bitmap - but clear only clipping window 
+			//al_clear_to_color(al_map_rgb(0, 0, 0));
+			update_intro2();
+
+			//al_draw_text(font, al_map_rgb(255, 255, 255), 0, 0, 0, "Hello world!");
+			al_flip_display();
+
+			redraw = false;
+
+		}
+
+		/*
 	for (;;)
 	{
 		update_intro2();
@@ -1197,11 +1257,12 @@ void run_second_intro_screen (void)
 
 		kbd_poll_keyboard();
 
-		if (kbd_space_pressed) 
+		if (kbd_space_pressed)
 			break;
-	} 
-
-	snd_stop_midi();
+	}
+	*/
+	}
+	
 }
 
 
@@ -1292,6 +1353,7 @@ void info_message (char *message)
 }
 
 // Main init of the system
+// Create the display and load the Allegro addons
 int initialise_allegro (void)
 {
 	
@@ -1301,17 +1363,10 @@ int initialise_allegro (void)
 		return 0;
 	}
 
-	display = al_create_display(800, 600);
-
-	if (!display) {
-		al_show_native_message_box(display, "Error", "Error", "Failed to initialize display!",
-			NULL, ALLEGRO_MESSAGEBOX_ERROR);
-		return 0;
-	}
-
-
 	al_install_keyboard();
 	al_install_mouse();
+	al_init_ttf_addon();
+	al_init_font_addon();
 	
 	if (!al_init_image_addon()) {
 		al_show_native_message_box(display, "Error", "Error", "Failed to initialize al_init_image_addon!",
@@ -1325,25 +1380,8 @@ int initialise_allegro (void)
 		return 0;
 	}
 
-	ALLEGRO_FONT* font = al_create_builtin_font();
-
-	/*
-	image = al_load_bitmap("D:/cloud/gdrive/GDevelopment/Elite/Debug/blake.bmp");
-
-	if (!image) {
-		al_show_native_message_box(display, "Error", "Error", "Failed to load image!",
-			NULL, ALLEGRO_MESSAGEBOX_ERROR);
-		al_destroy_display(display);
-		return 0;
-	}
-	*/
-
-	//al_draw_line(0.0, 0.0, 100.1, 100.1, al_map_rgb(255, 0, 0), 5.0);
-	//al_draw_line(0.0, 0.0, 100.1, 100.1, al_map_rgb(255, 0, 0), 5.0);
 	
-	//al_draw_bitmap(image, 200, 200, 0);
-
-	//al_flip_display();
+	// TODO - Allegro Joystick probably - will get round to it
 	
 	have_joystick = 0;
 	
@@ -1403,6 +1441,9 @@ int main(int argc, char** argv)
 		update_console();
 
 		current_screen = SCR_FRONT_VIEW;
+		// TODO - must have this in config maybe - then we can set screen sizes 
+		gfx_set_clip_region(1, 1, 510, 383);
+
 		run_first_intro_screen();
 		run_second_intro_screen();
 
@@ -1411,6 +1452,7 @@ int main(int argc, char** argv)
 
 		dock_player ();
 		display_commander_status ();
+		//al_flip_display();
 
 		bool redraw = true;
 		
@@ -1418,173 +1460,201 @@ int main(int argc, char** argv)
 		{
 			//snd_update_sound();
 			//gfx_update_screen();
-			
+
 			// TODO - need to put this into some kind of size thing
-			gfx_set_clip_region (1, 1, 510, 383);
+			gfx_set_clip_region(1, 1, 510, 383);
 
 			rolling = 0;
 			climbing = 0;
 
 			al_wait_for_event(queue, &event);
+			
 
 			if (event.type == ALLEGRO_EVENT_TIMER) {
+				// The way this works is now that redraw controls any graphics update
 				redraw = true;
 			}
-			else if ((event.type == ALLEGRO_EVENT_KEY_DOWN) || (event.type == ALLEGRO_EVENT_DISPLAY_CLOSE))
+			else
 			{
-				printf("%d\n", event.keyboard.keycode);
+				redraw = false;
+				//printf("Event Type: %d\n", event.type);
+			}
+			
+			if ((event.type == ALLEGRO_EVENT_KEY_DOWN) || (event.type == ALLEGRO_EVENT_DISPLAY_CLOSE))
+			{
+				printf("Key Down: %d\n", event.keyboard.keycode);
 				handle_flight_keys(event.keyboard.keycode);
+				continue;
+				//break;
+			}
+			else if ((event.type == ALLEGRO_EVENT_KEY_CHAR) )
+			{
+				printf("Char %d\n", event.keyboard.keycode);
+				handle_flight_keys(event.keyboard.keycode);
+				//continue;
 				//break;
 			}
 
+			else if ((event.type == ALLEGRO_EVENT_DISPLAY_CLOSE))
+			{
+				printf("%d\n", event.keyboard.keycode);
+				//handle_flight_keys(event.keyboard.keycode);
+				exit(0);
+				//break;
+			}
+			
+
 			if (redraw && al_is_event_queue_empty(queue))
 			{
-				al_clear_to_color(al_map_rgb(0, 0, 0));
-				//al_draw_text(font, al_map_rgb(255, 255, 255), 0, 0, 0, "Hello world!");
-				al_flip_display();
-
-				redraw = false;
-				//gfx_update_screen();
-			}
-
-						
-			if (game_paused)
-				continue;
-				
-			if (message_count > 0)
-				message_count--;
-
-			if (!rolling)
-			{
-				if (flight_roll > 0)
-					decrease_flight_roll();
 			
-				if (flight_roll < 0)
-					increase_flight_roll();
-			}
+				redraw = false;
+				
+				gfx_draw_line(0, 0, 0, 384);
+				gfx_draw_line(0, 0, 511, 0);
+				gfx_draw_line(511, 0, 511, 384);
+				gfx_draw_line(0, 384, 511, 384);
 
-			if (!climbing)
-			{
-				if (flight_climb > 0)
-					decrease_flight_climb();
-
-				if (flight_climb < 0)
-					increase_flight_climb();
-			}
-
-
-			if (!docked)
-			{
-				gfx_acquire_screen();
-					
-				if ((current_screen == SCR_FRONT_VIEW) || (current_screen == SCR_REAR_VIEW) ||
-					(current_screen == SCR_LEFT_VIEW) || (current_screen == SCR_RIGHT_VIEW) ||
-					(current_screen == SCR_INTRO_ONE) || (current_screen == SCR_INTRO_TWO) ||
-					(current_screen == SCR_GAME_OVER))
-				{
-					gfx_clear_display();
-					update_starfield();
-				}
-
-				if (auto_pilot)
-				{
-					auto_dock();
-					if ((mcount & 127) == 0)
-						info_message ("Docking Computers On");
-				}
-
-				update_universe ();
-
-				if (docked)
-				{
-					update_console();
-					gfx_release_screen();
+				if (game_paused)
 					continue;
-				}
-
-				if ((current_screen == SCR_FRONT_VIEW) || (current_screen == SCR_REAR_VIEW) ||
-					(current_screen == SCR_LEFT_VIEW) || (current_screen == SCR_RIGHT_VIEW))
-				{
-					if (draw_lasers)
-					{
-						draw_laser_lines();
-						draw_lasers--;
-					}
-					
-					draw_laser_sights();
-				}
 
 				if (message_count > 0)
-					gfx_display_centre_text (358, message_string, 120, GFX_COL_WHITE);
-					
-				if (hyper_ready)
+					message_count--;
+
+				if (!rolling)
 				{
-					display_hyper_status();
-					if ((mcount & 3) == 0)
+					if (flight_roll > 0)
+						decrease_flight_roll();
+
+					if (flight_roll < 0)
+						increase_flight_roll();
+				}
+
+				if (!climbing)
+				{
+					if (flight_climb > 0)
+						decrease_flight_climb();
+
+					if (flight_climb < 0)
+						increase_flight_climb();
+				}
+
+
+				if (!docked)
+				{
+					
+
+					if ((current_screen == SCR_FRONT_VIEW) || (current_screen == SCR_REAR_VIEW) ||
+						(current_screen == SCR_LEFT_VIEW) || (current_screen == SCR_RIGHT_VIEW) ||
+						(current_screen == SCR_INTRO_ONE) || (current_screen == SCR_INTRO_TWO) ||
+						(current_screen == SCR_GAME_OVER))
 					{
-						countdown_hyperspace();
+						gfx_clear_display();
+						update_starfield();
+					}
+
+					if (auto_pilot)
+					{
+						auto_dock();
+						if ((mcount & 127) == 0)
+							info_message("Docking Computers On");
+					}
+
+					update_universe();
+
+					if (docked)
+					{
+						update_console();
+						gfx_release_screen();
+						continue;
+					}
+
+					if ((current_screen == SCR_FRONT_VIEW) || (current_screen == SCR_REAR_VIEW) ||
+						(current_screen == SCR_LEFT_VIEW) || (current_screen == SCR_RIGHT_VIEW))
+					{
+						if (draw_lasers)
+						{
+							draw_laser_lines();
+							draw_lasers--;
+						}
+
+						draw_laser_sights();
+					}
+
+					if (message_count > 0)
+						gfx_display_centre_text(358, message_string, 120, GFX_COL_WHITE);
+
+					if (hyper_ready)
+					{
+						display_hyper_status();
+						if ((mcount & 3) == 0)
+						{
+							countdown_hyperspace();
+						}
+					}
+
+					
+					mcount--;
+					if (mcount < 0)
+						mcount = 255;
+
+					if ((mcount & 7) == 0)
+						regenerate_shields();
+
+					if ((mcount & 31) == 10)
+					{
+						if (energy < 50)
+						{
+							info_message("ENERGY LOW");
+							snd_play_sample(SND_BEEP);
+						}
+
+						update_altitude();
+					}
+
+					if ((mcount & 31) == 20)
+						update_cabin_temp();
+
+					if ((mcount == 0) && (!witchspace))
+						random_encounter();
+
+					cool_laser();
+					time_ecm();
+
+					update_console();
+				}
+
+				if (current_screen == SCR_BREAK_PATTERN)
+					display_break_pattern();
+
+				if (cross_timer > 0)
+				{
+					cross_timer--;
+					if (cross_timer == 0)
+					{
+						show_distance_to_planet();
 					}
 				}
 
-				gfx_release_screen();
-			
-				mcount--;
-				if (mcount < 0)
-					mcount = 255;
-
-				if ((mcount & 7) == 0)
-					regenerate_shields();
-
-				if ((mcount & 31) == 10)
+				if ((cross_x != old_cross_x) ||
+					(cross_y != old_cross_y))
 				{
-					if (energy < 50)
-					{
-						info_message ("ENERGY LOW");
-						snd_play_sample (SND_BEEP);
-					}
+					if (old_cross_x != -1)
+						draw_cross(old_cross_x, old_cross_y);
 
-					update_altitude();
-				}
-				
-				if ((mcount & 31) == 20)
-					update_cabin_temp();
-					
-				if ((mcount == 0) && (!witchspace))
-					random_encounter();
-					
-				cool_laser();				
-				time_ecm();
+					old_cross_x = cross_x;
+					old_cross_y = cross_y;
 
-				update_console();
-			}
-
-			if (current_screen == SCR_BREAK_PATTERN)
-				display_break_pattern();
-
-			if (cross_timer > 0)
-			{
-				cross_timer--;
-				if (cross_timer == 0)
-				{
-    				show_distance_to_planet();
+					draw_cross(old_cross_x, old_cross_y);
 				}
 			}
-			
-			if ((cross_x != old_cross_x) ||
-				(cross_y != old_cross_y))
-			{
-				if (old_cross_x != -1)
-					draw_cross (old_cross_x, old_cross_y);
 
-				old_cross_x = cross_x;
-				old_cross_y = cross_y;
-
-				draw_cross (old_cross_x, old_cross_y);
-			}
+			al_flip_display();
+			redraw = false;
 		}
 
-		if (!finish)		
+		if (!finish)
 			run_game_over_screen();
+
 	}
 
 	snd_sound_shutdown();

@@ -18,9 +18,6 @@
 
 
 
-
-
-
 ALLEGRO_DISPLAY* display = NULL;
 ALLEGRO_BITMAP* image = NULL;
 

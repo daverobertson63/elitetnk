@@ -72,9 +72,18 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Allegro_LibraryType>StaticMonolithRelease</Allegro_LibraryType>
     <Allegro_AddonFont>true</Allegro_AddonFont>
+    <Allegro_AddonImage>true</Allegro_AddonImage>
+    <Allegro_AddonPrimitives>true</Allegro_AddonPrimitives>
+    <Allegro_AddonAudio>true</Allegro_AddonAudio>
+    <Allegro_AddonDialog>true</Allegro_AddonDialog>
+    <Allegro_AddonColor>true</Allegro_AddonColor>
+    <Allegro_AddonAcodec>true</Allegro_AddonAcodec>
+    <Allegro_AddonVideo>true</Allegro_AddonVideo>
+    <Allegro_AddonTTF>true</Allegro_AddonTTF>
+    <Allegro_AddonMemfile>true</Allegro_AddonMemfile>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <Allegro_LibraryType>DynamicDebug</Allegro_LibraryType>
+    <Allegro_LibraryType>DynamicRelease</Allegro_LibraryType>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Allegro_LibraryType>DynamicDebug</Allegro_LibraryType>
@@ -156,11 +165,11 @@
     <ClCompile Include="options.c" />
     <ClCompile Include="pilot.c" />
     <ClCompile Include="planet.c" />
+    <ClCompile Include="polyorder.cpp" />
     <ClCompile Include="random.c" />
     <ClCompile Include="shipdata.c" />
     <ClCompile Include="shipface.c" />
     <ClCompile Include="sound.c" />
-    <ClCompile Include="eliteMain.cpp" />
     <ClCompile Include="space.c" />
     <ClCompile Include="stars.c" />
     <ClCompile Include="swat.c" />
@@ -200,14 +209,14 @@
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
-    <Import Project="..\packages\AllegroDeps.1.9.0.0\build\native\AllegroDeps.targets" Condition="Exists('..\packages\AllegroDeps.1.9.0.0\build\native\AllegroDeps.targets')" />
-    <Import Project="..\packages\Allegro.5.2.5.1\build\native\Allegro.targets" Condition="Exists('..\packages\Allegro.5.2.5.1\build\native\Allegro.targets')" />
+    <Import Project="..\packages\AllegroDeps.1.3.0.4\build\native\AllegroDeps.targets" Condition="Exists('..\packages\AllegroDeps.1.3.0.4\build\native\AllegroDeps.targets')" />
+    <Import Project="..\packages\Allegro.5.1.12.4\build\native\Allegro.targets" Condition="Exists('..\packages\Allegro.5.1.12.4\build\native\Allegro.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\packages\AllegroDeps.1.9.0.0\build\native\AllegroDeps.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\AllegroDeps.1.9.0.0\build\native\AllegroDeps.targets'))" />
-    <Error Condition="!Exists('..\packages\Allegro.5.2.5.1\build\native\Allegro.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Allegro.5.2.5.1\build\native\Allegro.targets'))" />
+    <Error Condition="!Exists('..\packages\AllegroDeps.1.3.0.4\build\native\AllegroDeps.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\AllegroDeps.1.3.0.4\build\native\AllegroDeps.targets'))" />
+    <Error Condition="!Exists('..\packages\Allegro.5.1.12.4\build\native\Allegro.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Allegro.5.1.12.4\build\native\Allegro.targets'))" />
   </Target>
 </Project>

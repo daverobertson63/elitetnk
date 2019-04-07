@@ -515,7 +515,7 @@ void display_commander_status (void)
 
 	sprintf (str, "COMMANDER %s", cmdr.name);
 
-	gfx_display_centre_text (10, str, 140, GFX_COL_GOLD);
+	gfx_display_centre_text (10, str, 160, GFX_COL_GOLD);
 
 	gfx_draw_line (0, 36, 511, 36);
 
@@ -575,7 +575,7 @@ void display_commander_status (void)
 		strcpy (str, cmdr.legal_status > 50 ? "Fugitive" : "Offender");
 
 	gfx_display_colour_text (16, 138, "Legal Status:", GFX_COL_GREEN_1);
-	gfx_display_text (128, 138, str);
+	gfx_display_text (134, 138, str);
 
 	for (i = 0; i < NO_OF_RANKS; i++)
 		if (cmdr.score >= rating[i].score)

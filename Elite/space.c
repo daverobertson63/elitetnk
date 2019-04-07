@@ -961,7 +961,7 @@ void display_missiles (void)
 	}
 }
 
-
+// Update the rader etc
 void update_console (void)
 {
 	gfx_set_clip_region (0, 0, 512, 512);
@@ -1282,6 +1282,7 @@ void launch_player (void)
 
 	current_screen = SCR_BREAK_PATTERN;
 	snd_play_sample (SND_LAUNCH);
+	puts("Player launched");
 }
 
 

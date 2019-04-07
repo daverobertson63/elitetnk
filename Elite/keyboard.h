@@ -61,7 +61,7 @@ extern int kbd_space_pressed;
 
 int kbd_keyboard_startup (void);
 int kbd_keyboard_shutdown (void);
-void kbd_poll_keyboard (void);
+void kbd_poll_keyboard (int);
 int kbd_read_key (void);
 void kbd_clear_key_buffer (void);
 

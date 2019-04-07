@@ -177,7 +177,7 @@ void draw_solid_ship (struct univ_object *univ)
 	struct ship_face *face_data;
 	int num_faces;
 	int num_points;
-	int poly_list[16];
+	int poly_list[18];
 	int zavg;
 	struct ship_solid *solid_data;
 	struct ship_data *ship;
@@ -317,9 +317,10 @@ void draw_solid_ship (struct univ_object *univ)
 			}
 			
 
-			//gfx_render_polygon (face_data[i].points, poly_list, face_data[i].colour, zavg);
-			printf("Polygon %d\n", num_points);
-			gfx_polygon(num_points, poly_list, 138);
+			gfx_render_polygon (face_data[i].points, poly_list, face_data[i].colour, zavg);
+			
+			// Direct call if needed for diagnostics
+			//gfx_polygon(num_points, poly_list, face_data[i].colour);
 			
 			
 		}
@@ -329,6 +330,8 @@ void draw_solid_ship (struct univ_object *univ)
 	{
 		lasv = ship_list[univ->type]->front_laser;
 		col = (univ->type == SHIP_VIPER) ? GFX_COL_CYAN : GFX_COL_WHITE; 
+
+		return;
 		
 		gfx_render_line (point_list[lasv].x, point_list[lasv].y,
 						 univ->location.x > 0 ? 0 : 511, rand255() * 2,
@@ -576,6 +579,7 @@ void render_planet_line (int xo, int yo, int x, int y, int radius, int vx, int v
 		rx += vx;
 		ry += vy;
 	}
+	
 }
 
 
@@ -1010,8 +1014,8 @@ void draw_ship (struct univ_object *ship)
 	
 	
 	if (wireframe) {
-		//draw_wireframe_ship(ship);
-		draw_solid_ship(ship);
+		draw_wireframe_ship(ship);
+		
 	}
 	else
 	{

@@ -1,3 +1,4 @@
+
 /*
  * Elite - The New Kind.
  *
@@ -80,42 +81,42 @@ extern char* EliteColors[141];
 
 // This is a kind of palette mapping - use the indexes in the existing A4 lib calls
 #define GFX_COL_BLACK		7
-#define GFX_COL_DARK_RED	28
-#define GFX_COL_WHITE		138
-#define GFX_COL_GOLD		39
-#define GFX_COL_RED			49
-#define GFX_COL_CYAN		11
+#define GFX_COL_DARK_RED	31
+#define GFX_COL_WHITE		137
+#define GFX_COL_GOLD		49
+#define GFX_COL_RED			114
+#define GFX_COL_CYAN		20
 
-#define GFX_COL_GREY_1		138
-#define GFX_COL_GREY_2		138
-#define GFX_COL_GREY_3		138
-#define GFX_COL_GREY_4		138
+#define GFX_COL_GREY_1		50
+#define GFX_COL_GREY_2		73
+#define GFX_COL_GREY_3		126
+#define GFX_COL_GREY_4		24
 
-#define GFX_COL_BLUE_1		45
-#define GFX_COL_BLUE_2		46
-#define GFX_COL_BLUE_3		133
-#define GFX_COL_BLUE_4		4
+#define GFX_COL_BLUE_1		9
+#define GFX_COL_BLUE_2		17
+#define GFX_COL_BLUE_3		21
+#define GFX_COL_BLUE_4		39
 
 #define GFX_COL_RED_3		1
 #define GFX_COL_RED_4		71
 
-#define GFX_COL_WHITE_2		138
+#define GFX_COL_WHITE_2		137
 
-#define GFX_COL_YELLOW_1	37
-#define GFX_COL_YELLOW_2	39
-#define GFX_COL_YELLOW_3	89
-#define GFX_COL_YELLOW_4	138
-#define GFX_COL_YELLOW_5	138
+#define GFX_COL_YELLOW_1	139
+#define GFX_COL_YELLOW_2	66
+#define GFX_COL_YELLOW_3	75
+#define GFX_COL_YELLOW_4	140
+#define GFX_COL_YELLOW_5	66
 
-#define GFX_ORANGE_1		76
-#define GFX_ORANGE_2		77
-#define GFX_ORANGE_3		122
+#define GFX_ORANGE_1		99
+#define GFX_ORANGE_2		100
+#define GFX_ORANGE_3		29
 
-#define GFX_COL_GREEN_1		2
-#define GFX_COL_GREEN_2		17
-#define GFX_COL_GREEN_3		86
+#define GFX_COL_GREEN_1		51
+#define GFX_COL_GREEN_2		67
+#define GFX_COL_GREEN_3		61
 
-#define GFX_COL_PINK_1		138
+#define GFX_COL_PINK_1		109
 
 #define IMG_GREEN_DOT		1
 #define IMG_RED_DOT			2
@@ -128,6 +129,13 @@ extern char* EliteColors[141];
 #define IMG_MISSILE_RED		9
 #define IMG_BLAKE			10
 
+
+struct PointSwap
+{
+	int x, y;
+};
+
+typedef struct PointSwap PointSwap;
 
 int gfx_graphics_startup (void);
 void gfx_graphics_shutdown (void);
@@ -158,5 +166,6 @@ void gfx_render_polygon (int num_points, int *point_list, int face_colour, int z
 void gfx_render_line (int x1, int y1, int x2, int y2, int dist, int col);
 void gfx_finish_render (void);
 int gfx_request_file (char *title, char *path, char *ext);
+int OrderCCW(float* vertices, int verticeCount);
 
 #endif

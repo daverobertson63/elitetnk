@@ -20,10 +20,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <windows.h> 
 
 #include "elite.h"
 #include "config.h"
 #include "file.h"
+
+#define BUFSIZE MAX_PATH
 
 void write_config_file (void)
 {
@@ -127,7 +130,44 @@ void read_config_file (void)
 	
 	// Defaults
 
-	wireframe = 1;
+	TCHAR Buffer[BUFSIZE];
+	DWORD dwRet;
+
+	
+
+	dwRet = GetCurrentDirectory(BUFSIZE, Buffer);
+
+	if (dwRet == 0)
+	{
+		printf("GetCurrentDirectory failed (%d)\n", GetLastError());
+		return;
+	}
+	if (dwRet > BUFSIZE)
+	{
+		printf("Buffer too small; need %d characters\n", dwRet);
+		return;
+	}
+
+	
+	printf("Current Elite Folder: %s\n",Buffer);
+	//gets(Buffer);
+
+	/*
+	if (!SetCurrentDirectory(argv[1]))
+	{
+		printf("SetCurrentDirectory failed (%d)\n", GetLastError());
+		return;
+	}
+	_tprintf(TEXT("Set current directory to %s\n"), argv[1]);
+
+	if (!SetCurrentDirectory(Buffer))
+	{
+		printf("SetCurrentDirectory failed (%d)\n", GetLastError());
+		return;
+	}
+	_tprintf(TEXT("Restored previous directory (%s)\n"), Buffer);
+	*/
+
 
 	fp = fopen ("newkind.cfg", "r");
 	if (fp == NULL)

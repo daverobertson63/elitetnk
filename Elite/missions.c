@@ -203,13 +203,14 @@ void constrictor_mission_brief (void)
 	flight_climb = 0;
 	flight_speed = 0;
 
+	// TODO - need to create new loop 
 	do
 	{
 		gfx_clear_area (310, 50, 510, 180);
 		update_universe ();
 		universe[0].location.z = 600;
 		gfx_update_screen();
-		kbd_poll_keyboard();
+		kbd_poll_keyboard(3);
 	} while (!kbd_space_pressed);
 }	
 

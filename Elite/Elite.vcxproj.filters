@@ -15,13 +15,13 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
     <None Include="newkind.cfg">
       <Filter>Source Files</Filter>
     </None>
     <None Include="newscan.cfg">
       <Filter>Source Files</Filter>
     </None>
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -90,7 +90,7 @@
     <ClCompile Include="vector.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="eliteMain.cpp">
+    <ClCompile Include="polyorder.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

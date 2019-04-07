@@ -17,51 +17,52 @@
 
 #include <stdlib.h>
 #include <string.h>
+
  
 #include "allegro5/allegro.h"
 
 //extern volatile char key[200];
 char key[200];
 
-bool kbd_F1_pressed;
-bool kbd_F2_pressed;
-bool kbd_F3_pressed;
-bool kbd_F4_pressed;
-bool kbd_F5_pressed;
-bool kbd_F6_pressed;
-bool kbd_F7_pressed;
-bool kbd_F8_pressed;
-bool kbd_F9_pressed;
-bool kbd_F10_pressed;
-bool kbd_F11_pressed;
-bool kbd_F12_pressed;
-bool kbd_y_pressed;
-bool kbd_n_pressed;
-bool kbd_fire_pressed;
-bool kbd_ecm_pressed;
-bool kbd_energy_bomb_pressed;
-bool kbd_hyperspace_pressed;
-bool kbd_ctrl_pressed;
-bool kbd_jump_pressed;
-bool kbd_escape_pressed;
-bool kbd_dock_pressed;
-bool kbd_d_pressed;
-bool kbd_origin_pressed;
-bool kbd_find_pressed;
-bool kbd_fire_missile_pressed;
-bool kbd_target_missile_pressed;
-bool kbd_unarm_missile_pressed;
-bool kbd_pause_pressed;
-bool kbd_resume_pressed;
-bool kbd_inc_speed_pressed;
-bool kbd_dec_speed_pressed;
-bool kbd_up_pressed;
-bool kbd_down_pressed;
-bool kbd_left_pressed;
-bool kbd_right_pressed;
-bool kbd_enter_pressed;
-bool kbd_backspace_pressed;
-bool kbd_space_pressed;
+int kbd_F1_pressed;
+int kbd_F2_pressed;
+int kbd_F3_pressed;
+int kbd_F4_pressed;
+int kbd_F5_pressed;
+int kbd_F6_pressed;
+int kbd_F7_pressed;
+int kbd_F8_pressed;
+int kbd_F9_pressed;
+int kbd_F10_pressed;
+int kbd_F11_pressed;
+int kbd_F12_pressed;
+int kbd_y_pressed;
+int kbd_n_pressed;
+int kbd_fire_pressed;
+int kbd_ecm_pressed;
+int kbd_energy_bomb_pressed;
+int kbd_hyperspace_pressed;
+int kbd_ctrl_pressed;
+int kbd_jump_pressed;
+int kbd_escape_pressed;
+int kbd_dock_pressed;
+int kbd_d_pressed;
+int kbd_origin_pressed;
+int kbd_find_pressed;
+int kbd_fire_missile_pressed;
+int kbd_target_missile_pressed;
+int kbd_unarm_missile_pressed;
+int kbd_pause_pressed;
+int kbd_resume_pressed;
+int kbd_inc_speed_pressed;
+int kbd_dec_speed_pressed;
+int kbd_up_pressed;
+int kbd_down_pressed;
+int kbd_left_pressed;
+int kbd_right_pressed;
+int kbd_enter_pressed;
+int kbd_backspace_pressed;
+int kbd_space_pressed;
 
 
 int kbd_keyboard_startup (void)

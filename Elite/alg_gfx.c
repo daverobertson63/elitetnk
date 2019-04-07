@@ -24,16 +24,27 @@
 #include <allegro5/allegro_color.h>
 #include <allegro5/allegro_primitives.h>
 #include "allegro5/allegro_image.h"
+#include <allegro5/allegro_font.h>
+#include <allegro5/allegro_ttf.h>
+#include "allegro5/allegro_native_dialog.h"
+
 
 #include "config.h"
 #include "gfx.h"
 #include "alg_data.h"
 #include "elite.h"
 
+#define EXTERNC extern "C"
+
 // Main elements in grpahics stuff
 extern ALLEGRO_DISPLAY* display;
 extern ALLEGRO_BITMAP* image;
+extern ALLEGRO_FONT* _Font_ELITE_1;
+extern ALLEGRO_FONT* _Font_ELITE_2;
+extern ALLEGRO_FONT* _Font_ELITE_3;
 
+
+float polygon[8] = { 640.0f, 100.0f, 640.0f, 300.0f, 380.0f, 350.0f, 200.0f, 200.0f };
 
 char* EliteColors[141] = {
 
@@ -128,11 +139,8 @@ char* EliteColors[141] = {
 };
 
 
-ALLEGRO_BITMAP *gfx_screen;
-volatile int frame_count;
 
 ALLEGRO_BITMAP *scanner_image;
-extern ALLEGRO_BITMAP* screen;
 
 // Replace the datafile loader - just create perm bitmaps
 ALLEGRO_BITMAP* sprite_bmp_blake;
@@ -161,14 +169,15 @@ struct poly_data
 	int next;
 };
 
+
+
+// A global point needed for sorting points with reference 
+// to the first point. Used in compare function of qsort() 
+PointSwap p0;
+
+
+
 static struct poly_data poly_chain[MAX_POLYS];
-
-
-void frame_timer (void)
-{
-	frame_count++;
-}
-END_OF_FUNCTION(frame_timer);
 
 
 
@@ -179,6 +188,26 @@ int gfx_graphics_startup (void)
 	// TODO
 	// Just load up some bitmaps from files
 	ALLEGRO_PATH* path = al_get_standard_path(ALLEGRO_RESOURCES_PATH);
+
+	printf("gfx_graphics_startup\n");
+	printf("Elite path %s\n", al_path_cstr(path, '/'));
+
+	display = al_create_display(800, 600);
+
+	if (!display) {
+		al_show_native_message_box(display, "Error", "Error", "Failed to initialize display!",NULL, ALLEGRO_MESSAGEBOX_ERROR);
+		return 1;
+	}
+
+	al_set_path_filename(path, "data/scanner.bmp");
+	scanner_image = al_load_bitmap(al_path_cstr(path, '/'));
+
+	if (!scanner_image)
+	{
+		al_show_native_message_box(display, "Error", "Error", "Failed to load the scanner image!", NULL, ALLEGRO_MESSAGEBOX_ERROR);
+		printf("gfx_graphics_startup failed - cant load the scanner image\n");
+		return 1;
+	}
 
 	al_set_path_filename(path, "data/blake.bmp");
 	sprite_bmp_blake = al_load_bitmap(al_path_cstr(path, '/'));
@@ -192,7 +221,7 @@ int gfx_graphics_startup (void)
 	al_set_path_filename(path, "data/missred.bmp");
 	sprite_bmp_missred = al_load_bitmap(al_path_cstr(path, '/'));
 
-	al_set_path_filename(path, "data/missyel.bmp");
+	al_set_path_filename(path, "data/missyell.bmp");
 	sprite_bmp_missyel = al_load_bitmap(al_path_cstr(path, '/'));
 
 	al_set_path_filename(path, "data/ecm.bmp");
@@ -200,6 +229,9 @@ int gfx_graphics_startup (void)
 
 	al_set_path_filename(path, "data/reddot.bmp");
 	sprite_bmp_reddot = al_load_bitmap(al_path_cstr(path, '/'));
+
+	al_set_path_filename(path, "data/greendot.bmp");
+	sprite_bmp_greendot = al_load_bitmap(al_path_cstr(path, '/'));
 
 	al_set_path_filename(path, "data/safe.bmp");
 	sprite_bmp_safe = al_load_bitmap(al_path_cstr(path, '/'));
@@ -210,21 +242,7 @@ int gfx_graphics_startup (void)
 	al_set_path_filename(path, "data/big_s.bmp");
 	sprite_bmp_bigs = al_load_bitmap(al_path_cstr(path, '/'));
 
-
 	
-	scanner_image = al_load_bitmap(scanner_filename);
-	if (!scanner_image)
-	{
-		return 1;
-	}
-
-	/* Create the screen buffer bitmap */
-	//int AL_SCREEN_W = 512;
-	//int AL_SCREEN_H = 512;
-	//gfx_screen = al_create_bitmap (AL_SCREEN_W, AL_SCREEN_H);
-
-	//clear (gfx_screen);
-
 	int sw = al_get_bitmap_width(scanner_image);
 	int sh = al_get_bitmap_height(scanner_image);
 
@@ -238,12 +256,22 @@ int gfx_graphics_startup (void)
 	gfx_draw_line (0, 0, 511, 0);
 	gfx_draw_line (511, 0, 511, 384);
 
+	ALLEGRO_FONT* font = al_create_builtin_font();
+
+	al_set_path_filename(path, "data/courbd.ttf");
+	_Font_ELITE_1 = al_load_ttf_font(al_path_cstr(path, '/'), 18, 0);
+	_Font_ELITE_2 = al_load_ttf_font(al_path_cstr(path, '/'), 15, 0);
+	_Font_ELITE_3 = al_load_ttf_font(al_path_cstr(path, '/'), 22, 0);
+	
+	//printf("gfx_graphics_startup - complete\n");
+	//buff = gets();
+
 	//TODO - Probably covered with other things
 	/* Install a timer to regulate the speed of the game... */
 	// TODO - Regulate
 	//LOCK_VARIABLE(frame_count);
 	//LOCK_FUNCTION(frame_timer);
-	frame_count = 0;
+	//frame_count = 0;
 	//install_int (frame_timer, speed_cap);
 	
 	return 0;
@@ -301,8 +329,10 @@ void gfx_release_screen (void)
 
 void gfx_fast_plot_pixel (int x, int y, int col)
 {
+	
 	ALLEGRO_COLOR colName = al_color_name(EliteColors[col]);
-	al_put_pixel(x, y, colName);
+	
+	gfx_plot_pixel(x, y, col);
 	//putpixel(gfx_screen, x, y, col);
 	
 	//gfx_screen->line[y][x] = col;
@@ -312,7 +342,7 @@ void gfx_fast_plot_pixel (int x, int y, int col)
 void gfx_plot_pixel (int x, int y, int col)
 {
 	ALLEGRO_COLOR colName = al_color_name(EliteColors[col]);
-	al_put_pixel(x, y, colName);
+	al_put_pixel(x + GFX_X_OFFSET, y + GFX_Y_OFFSET, colName);
 	//putpixel (gfx_screen, x + GFX_X_OFFSET, y + GFX_Y_OFFSET, col);
 }
 
@@ -346,9 +376,11 @@ void gfx_draw_circle (int cx, int cy, int radius, int circle_colour)
 // Draw a white line
 void gfx_draw_line (int x1, int y1, int x2, int y2)
 {
+
+	//al_set_blender(ALLEGRO_ADD, ALLEGRO_ONE, ALLEGRO_ONE);
 	
 	ALLEGRO_COLOR colName = al_color_name(EliteColors[GFX_COL_WHITE]);
-	//al_draw_line(0.0,0.1,10.1,10.1, al_map_rgb(255, 0, 0), 1.1);
+	
 	al_draw_line (x1 + GFX_X_OFFSET, y1 + GFX_Y_OFFSET, x2 + GFX_X_OFFSET, y2 + GFX_Y_OFFSET, colName,0);
 
 
@@ -359,9 +391,9 @@ void gfx_draw_line (int x1, int y1, int x2, int y2)
 void gfx_draw_colour_line (int x1, int y1, int x2, int y2, int line_colour)
 {
 	
-	//ALLEGRO_COLOR colName = al_color_name(EliteColors[line_colour]);
-	ALLEGRO_COLOR colName = al_color_name(EliteColors[GFX_COL_WHITE]);
-	//al_draw_line (x1 + GFX_X_OFFSET, y1 + GFX_Y_OFFSET, x2 + GFX_X_OFFSET, y2 + GFX_Y_OFFSET, colName,0);
+	ALLEGRO_COLOR colName = al_color_name(EliteColors[line_colour]);
+	
+	al_draw_line (x1 + GFX_X_OFFSET, y1 + GFX_Y_OFFSET, x2 + GFX_X_OFFSET, y2 + GFX_Y_OFFSET, colName,0);
 }
 
 
@@ -376,16 +408,25 @@ void gfx_draw_triangle (int x1, int y1, int x2, int y2, int x3, int y3, int col)
 
 
 
+// Draw simple text - white - with a fixed point font
 void gfx_display_text (int x, int y, char *txt)
 {
+	
+	ALLEGRO_COLOR colName = al_color_name(EliteColors[GFX_COL_WHITE]);
+	al_draw_text(_Font_ELITE_2, colName, (x / (2 / GFX_SCALE)) + GFX_X_OFFSET, (y / (2 / GFX_SCALE)) + GFX_Y_OFFSET, ALLEGRO_ALIGN_LEFT, txt);
+
 	//text_mode (-1);
 	// 
 	//textout (gfx_screen, 1, txt, (x / (2 / GFX_SCALE)) + GFX_X_OFFSET, (y / (2 / GFX_SCALE)) + GFX_Y_OFFSET, GFX_COL_WHITE);
+	
+	//al_draw_text(_Font, textcolor, VLeft, VTop, ALLEGRO_ALIGN_LEFT, LineText.data());
 }
 
 
 void gfx_display_colour_text (int x, int y, char *txt, int col)
 {
+	ALLEGRO_COLOR colName = al_color_name(EliteColors[col]);
+	al_draw_text(_Font_ELITE_2, colName, (x / (2 / GFX_SCALE)) + GFX_X_OFFSET, (y / (2 / GFX_SCALE)) + GFX_Y_OFFSET, ALLEGRO_ALIGN_LEFT, txt);
 	//text_mode (-1);
 	
 	//textout (gfx_screen, 1, txt, (x / (2 / GFX_SCALE)) + GFX_X_OFFSET, (y / (2 / GFX_SCALE)) + GFX_Y_OFFSET, col);
@@ -397,20 +438,34 @@ void gfx_display_centre_text (int y, char *str, int psize, int col)
 {
 	int txt_size;
 	int txt_colour;
+	ALLEGRO_FONT font;
+
+	ALLEGRO_COLOR colName = al_color_name(EliteColors[col]);
 	
 	if (psize == 140)
 	{
-		txt_size = ELITE_2;
-		txt_colour = -1;
+		al_draw_text(_Font_ELITE_2, colName, (128 * GFX_SCALE) + GFX_X_OFFSET, (y / (2 / GFX_SCALE)) + GFX_Y_OFFSET, ALLEGRO_ALIGN_CENTER,str);
+		
+	
 	}
-	else
+	else if( psize==120)
 	{
-		txt_size = ELITE_1;
-		txt_colour = col;
+		al_draw_text(_Font_ELITE_1, colName, (128 * GFX_SCALE) + GFX_X_OFFSET, (y / (2 / GFX_SCALE)) + GFX_Y_OFFSET, ALLEGRO_ALIGN_CENTER, str);
+		
+	
 	}
+	else if (psize == 160) {
+		al_draw_text(_Font_ELITE_3, colName, (128 * GFX_SCALE) + GFX_X_OFFSET, (y / (2 / GFX_SCALE)) + GFX_Y_OFFSET, ALLEGRO_ALIGN_CENTER, str);
+		
+	}
+
 
 	//text_mode (-1);
 	//textout_centre (gfx_screen,  "TXT SIZE", str, (128 * GFX_SCALE) + GFX_X_OFFSET, (y / (2 / GFX_SCALE)) + GFX_Y_OFFSET, txt_colour);
+
+	
+
+
 }
 
 
@@ -503,7 +558,10 @@ void gfx_draw_scanner (void)
 
 void gfx_set_clip_region (int tx, int ty, int bx, int by)
 {
-	al_set_clipping_rectangle(tx + GFX_X_OFFSET, ty + GFX_Y_OFFSET, bx + GFX_X_OFFSET, by + GFX_Y_OFFSET);
+	
+	al_set_clipping_rectangle(tx + GFX_X_OFFSET, ty + GFX_Y_OFFSET, bx, by );
+
+	// Old call 
 	//set_clip (gfx_screen, tx + GFX_X_OFFSET, ty + GFX_Y_OFFSET, bx + GFX_X_OFFSET, by + GFX_Y_OFFSET);
 }
 
@@ -535,7 +593,7 @@ void gfx_render_polygon (int num_points, int *point_list, int face_colour, int z
 
 	for (i = 0; i < 16; i++)
 	{
-		printf("%d\n",point_list[i]);
+		//printf("%d\n",point_list[i]);
 		poly_chain[x].point_list[i] = point_list[i];
 	}
 
@@ -577,7 +635,7 @@ void gfx_render_line (int x1, int y1, int x2, int y2, int dist, int col)
 	gfx_render_polygon (2, point_list, col, dist);
 }
 
-
+// TODO FIX
 void gfx_finish_render (void)
 {
 	int num_points;
@@ -585,8 +643,6 @@ void gfx_finish_render (void)
 	int i;
 	int col;
 
-	return;
-	
 	if (total_polys == 0)
 		return;
 		
@@ -611,40 +667,30 @@ void gfx_polygon (int num_points, int *poly_list, int face_colour)
 {
 	int i;
 	int x,y;
-	int x1, y1, x2, y2;
-	float polygon[200];
+	float x1, y1, x2, y2;
+	float polylistf[16];		// Slighthack here - but no matter
 	int vertex = 0;
 	
-	printf("Point %d\n", num_points);
-
 	x = 0;
 	y = 1;
 
-	
+	// Swap the integer list for float - as we need a float
 	for (i = 0; i < num_points; i++)
 	{
-		//poly_list[x] += GFX_X_OFFSET;
-		//poly_list[y] += GFX_Y_OFFSET;
-
-		polygon[x] = poly_list[x] + GFX_X_OFFSET;
-		polygon[y] = poly_list[y] + GFX_Y_OFFSET;
-
-		x1 = polygon[x];
-		y1 = polygon[y];
-
-		printf("Vertex  %d,%d\n", x1,y1);
-		vertex += 2;
-
-		x++;;
-		y++;
+		polylistf[x] = poly_list[x]+ GFX_X_OFFSET;
+		polylistf[y] = poly_list[y]+ GFX_Y_OFFSET;
+		x+=2;
+		y+=2;
 		
 	}
 
+	// This seems to  be required because vertice list in A5 needs to be CCW :(
+	OrderCCW(&polylistf[0], num_points);
+
 	ALLEGRO_COLOR colName = al_color_name(EliteColors[face_colour]);
-	
-	//al_draw_filled_polygon(polygon, vertex, colName);
-	al_draw_polygon(polygon, vertex, ALLEGRO_LINE_JOIN_BEVEL, colName, 1.0, 0);
-		
+	al_draw_filled_polygon(&polylistf[0], num_points, colName);
+
+	// Original A4	
 	//polygon (gfx_screen, num_points, poly_list, face_colour);
 }
 
@@ -685,11 +731,11 @@ void gfx_draw_sprite (int sprite_no, int x, int y)
 			sprite_bmp = sprite_bmp_missgrn;
 			break;
 
-		case IMG_MISSILE_YELLOW:
+		case IMG_MISSILE_RED:
 			sprite_bmp = sprite_bmp_missred;
 			break;
 
-		case IMG_MISSILE_RED:
+		case IMG_MISSILE_YELLOW:
 			sprite_bmp = sprite_bmp_missyel;
 			break;
 
@@ -723,4 +769,6 @@ int gfx_request_file (char *title, char *path, char *ext)
 
 	return okay;
 }
+
+
 
