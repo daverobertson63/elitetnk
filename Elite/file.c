@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <windows.h> 
+#include "../packages/Allegro.5.1.12.4/build/native/include/allegro5/system.h"
 
 #include "elite.h"
 #include "config.h"
@@ -133,7 +134,8 @@ void read_config_file (void)
 	TCHAR Buffer[BUFSIZE];
 	DWORD dwRet;
 
-	
+	// Ensure we have the correct resources path for the app
+	ALLEGRO_PATH* path = al_get_standard_path(ALLEGRO_RESOURCES_PATH);
 
 	dwRet = GetCurrentDirectory(BUFSIZE, Buffer);
 
@@ -149,9 +151,8 @@ void read_config_file (void)
 	}
 
 	
-	printf("Current Elite Folder: %s\n",Buffer);
-	//gets(Buffer);
-
+	printf("Current Windows Folder: %s\n",Buffer);
+	
 	/*
 	if (!SetCurrentDirectory(argv[1]))
 	{
@@ -168,28 +169,30 @@ void read_config_file (void)
 	_tprintf(TEXT("Restored previous directory (%s)\n"), Buffer);
 	*/
 
-
-	fp = fopen ("newkind.cfg", "r");
+	al_set_path_filename(path, "newkind.cfg");
+	
+	fp = fopen (al_path_cstr(path, '/'), "r");
 	if (fp == NULL)
 		return;
+	
+	int r;
+	read_cfg_line (str, sizeof(str), fp);
+	r = sscanf (str, "%d", &speed_cap);
 
 	read_cfg_line (str, sizeof(str), fp);
-	sscanf (str, "%d", &speed_cap);
+	r = sscanf (str, "%d", &wireframe);
 
 	read_cfg_line (str, sizeof(str), fp);
-	sscanf (str, "%d", &wireframe);
+	r = sscanf (str, "%d", &anti_alias_gfx);
 
 	read_cfg_line (str, sizeof(str), fp);
-	sscanf (str, "%d", &anti_alias_gfx);
-
-	read_cfg_line (str, sizeof(str), fp);
-	sscanf (str, "%d", &planet_render_style);
+	r = sscanf (str, "%d", &planet_render_style);
 	
 	read_cfg_line (str, sizeof(str), fp);
-	sscanf (str, "%d", &hoopy_casinos);
+	r = sscanf (str, "%d", &hoopy_casinos);
 
 	read_cfg_line (str, sizeof(str), fp);
-	sscanf (str, "%d", &instant_dock);
+	r = sscanf (str, "%d", &instant_dock);
 
 	read_cfg_line (str, sizeof(str), fp);
 	read_scanner_config_file (str);

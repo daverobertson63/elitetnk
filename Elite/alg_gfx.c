@@ -38,7 +38,10 @@
 
 // Main elements in grpahics stuff
 extern ALLEGRO_DISPLAY* display;
+extern ALLEGRO_BITMAP* gfx_screen;
 extern ALLEGRO_BITMAP* image;
+extern ALLEGRO_EVENT_QUEUE* queue;
+extern ALLEGRO_EVENT_QUEUE* queue;
 extern ALLEGRO_FONT* _Font_ELITE_1;
 extern ALLEGRO_FONT* _Font_ELITE_2;
 extern ALLEGRO_FONT* _Font_ELITE_3;
@@ -141,6 +144,7 @@ char* EliteColors[141] = {
 
 
 ALLEGRO_BITMAP *scanner_image;
+ALLEGRO_BITMAP* gfx_screen;
 
 // Replace the datafile loader - just create perm bitmaps
 ALLEGRO_BITMAP* sprite_bmp_blake;
@@ -154,6 +158,21 @@ ALLEGRO_BITMAP* sprite_bmp_reddot;
 ALLEGRO_BITMAP* sprite_bmp_safe;
 ALLEGRO_BITMAP* sprite_bmp_bige;
 ALLEGRO_BITMAP* sprite_bmp_bigs;
+
+
+ALLEGRO_DISPLAY* display;
+ALLEGRO_BITMAP* image;
+
+ALLEGRO_TIMER* timer = NULL;
+ALLEGRO_EVENT_QUEUE* queue = NULL;
+
+
+// Font defs - we have our own ttf BTW
+ALLEGRO_FONT* font = NULL;
+ALLEGRO_FONT* _Font_ELITE_1;
+ALLEGRO_FONT* _Font_ELITE_2;
+ALLEGRO_FONT* _Font_ELITE_3;
+ALLEGRO_EVENT event;
 
 #define MAX_POLYS	100
 
@@ -190,10 +209,24 @@ int gfx_graphics_startup (void)
 	ALLEGRO_PATH* path = al_get_standard_path(ALLEGRO_RESOURCES_PATH);
 
 	printf("gfx_graphics_startup\n");
-	printf("Elite path %s\n", al_path_cstr(path, '/'));
+	printf("Elite resources path %s\n", al_path_cstr(path, '/'));
 
-	display = al_create_display(800, 600);
+	// Display options
+	al_set_new_display_flags(ALLEGRO_WINDOWED);
+	//al_set_new_display_option(ALLEGRO_SAMPLE_BUFFERS, 2, ALLEGRO_SUGGEST);
+	//al_set_new_display_option(ALLEGRO_SAMPLES, 4, ALLEGRO_SUGGEST);
 
+	//creating game buffer
+	//al_set_new_bitmap_flags(ALLEGRO_MEMORY_BITMAP);
+	//al_set_new_bitmap_flags(ALLEGRO_MIN_LINEAR | ALLEGRO_MAG_LINEAR | ALLEGRO_MIPMAP | ALLEGRO_MEMORY_BITMAP);
+	//al_set_new_bitmap_samples(4);
+	//al_set_new_bitmap_format(0);
+	// Game buffer screen - memory bitmap
+	// Video bitmaps for big ops - if needed
+	gfx_screen = al_create_bitmap(SCREEN_WIDTH, SCREEN_HEIGHT);
+	al_set_new_bitmap_flags(ALLEGRO_VIDEO_BITMAP);
+	display = al_create_display(SCREEN_WIDTH, SCREEN_HEIGHT);
+	
 	if (!display) {
 		al_show_native_message_box(display, "Error", "Error", "Failed to initialize display!",NULL, ALLEGRO_MESSAGEBOX_ERROR);
 		return 1;
@@ -262,9 +295,24 @@ int gfx_graphics_startup (void)
 	_Font_ELITE_1 = al_load_ttf_font(al_path_cstr(path, '/'), 18, 0);
 	_Font_ELITE_2 = al_load_ttf_font(al_path_cstr(path, '/'), 15, 0);
 	_Font_ELITE_3 = al_load_ttf_font(al_path_cstr(path, '/'), 22, 0);
+
+	/* Start the sound system... */
+	//snd_sound_startup();
+
+	/* Do any setup necessary for the keyboard... */
+	//kbd_keyboard_startup();
+
+
+	timer = al_create_timer(1.0 / 21.0);
+	queue = al_create_event_queue();
+
+
+	al_register_event_source(queue, al_get_keyboard_event_source());
+	al_register_event_source(queue, al_get_display_event_source(display));
+	al_register_event_source(queue, al_get_timer_event_source(timer));
 	
-	//printf("gfx_graphics_startup - complete\n");
-	//buff = gets();
+	printf("gfx_graphics_startup - complete\n");
+	
 
 	//TODO - Probably covered with other things
 	/* Install a timer to regulate the speed of the game... */
@@ -277,19 +325,39 @@ int gfx_graphics_startup (void)
 	return 0;
 }
 
-
-void gfx_graphics_shutdown (void)
+void xor_mode(int mode)
 {
 
+
 	
+	if ( mode ) 
+		al_set_blender(ALLEGRO_ADD, ALLEGRO_INVERSE_DEST_COLOR, ALLEGRO_ZERO);
+	else
+		al_set_blender(ALLEGRO_ADD, ALLEGRO_ONE, ALLEGRO_ZERO);
+	return;
+}
+
+void gfx_graphics_shutdown(void)
+{
+
+
 	//TODO - Kill all the bitmsps
 	al_destroy_display(display);
+
 	// Remove the test image
 	al_destroy_bitmap(image);
-	
-	//destroy_bitmap(scanner_image);
-	//destroy_bitmap(gfx_screen);
-	//unload_datafile(datafile);
+
+	al_destroy_bitmap(scanner_image);
+	al_destroy_bitmap(gfx_screen);
+
+
+	al_destroy_event_queue(queue);
+	al_destroy_timer(timer);
+
+	al_uninstall_mouse();
+	al_uninstall_keyboard();
+	al_uninstall_system();
+
 }
 
 
@@ -341,8 +409,11 @@ void gfx_fast_plot_pixel (int x, int y, int col)
 // TODO
 void gfx_plot_pixel (int x, int y, int col)
 {
+	//al_lock_bitmap(al_get_target_bitmap(), ALLEGRO_PIXEL_FORMAT_ANY, 0); // The current target bitmap is the display back buffer
 	ALLEGRO_COLOR colName = al_color_name(EliteColors[col]);
 	al_put_pixel(x + GFX_X_OFFSET, y + GFX_Y_OFFSET, colName);
+	//al_unlock_bitmap(al_get_target_bitmap());
+
 	//putpixel (gfx_screen, x + GFX_X_OFFSET, y + GFX_Y_OFFSET, col);
 }
 
@@ -482,7 +553,7 @@ void gfx_clear_display (void)
 void gfx_clear_text_area (void)
 {
 	ALLEGRO_COLOR colName = al_color_name(EliteColors[GFX_COL_BLACK]);
-	al_draw_filled_rectangle(GFX_X_OFFSET + 1, GFX_Y_OFFSET + 1, 510 + GFX_X_OFFSET, 383 + GFX_Y_OFFSET, colName, 0);
+	al_draw_filled_rectangle(GFX_X_OFFSET + 1, GFX_Y_OFFSET + 340, 510 + GFX_X_OFFSET, 383 + GFX_Y_OFFSET, colName, 0);
 
 	//rectfill (gfx_screen, GFX_X_OFFSET + 1, GFX_Y_OFFSET + 340, 510 + GFX_X_OFFSET, 383 + GFX_Y_OFFSET, GFX_COL_BLACK);
 }

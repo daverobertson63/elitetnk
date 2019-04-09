@@ -27,6 +27,8 @@
 #ifndef GFX_H
 #define GFX_H
 
+
+
 #ifdef RES_512_512
 
 #define GFX_SCALE		(2)
@@ -43,6 +45,9 @@
 #endif
 
 #ifdef RES_800_600
+
+#define SCREEN_WIDTH    (800)
+#define SCREEN_HEIGHT   (600)
 
 #define GFX_SCALE		(2)
 #define GFX_X_OFFSET	(144)
@@ -78,6 +83,7 @@
 */
 
 extern char* EliteColors[141];
+
 
 // This is a kind of palette mapping - use the indexes in the existing A4 lib calls
 #define GFX_COL_BLACK		7
@@ -166,6 +172,8 @@ void gfx_render_polygon (int num_points, int *point_list, int face_colour, int z
 void gfx_render_line (int x1, int y1, int x2, int y2, int dist, int col);
 void gfx_finish_render (void);
 int gfx_request_file (char *title, char *path, char *ext);
+// Smelly
 int OrderCCW(float* vertices, int verticeCount);
+void xor_mode(int mode);
 
 #endif

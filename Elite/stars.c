@@ -21,6 +21,7 @@
 #include "vector.h"
 #include "stars.h"
 #include "random.h"
+#include "../packages/Allegro.5.1.12.4/build/native/include/allegro5/color.h"
 
 int warp_stars;
 
@@ -375,6 +376,9 @@ void flip_stars (void)
 
 void update_starfield (void)
 {
+
+	al_lock_bitmap(al_get_target_bitmap(), ALLEGRO_PIXEL_FORMAT_ANY, 0);
+
 	switch (current_screen)
 	{
 		case SCR_FRONT_VIEW:
@@ -394,4 +398,5 @@ void update_starfield (void)
 			side_starfield();
 			break;
 	}
+	al_unlock_bitmap(al_get_target_bitmap());
 }

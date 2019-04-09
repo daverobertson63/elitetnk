@@ -74,20 +74,22 @@ int have_joystick;
 int find_input;
 char find_name[20];
 
-ALLEGRO_DISPLAY* display;
-ALLEGRO_BITMAP* image;
+extern ALLEGRO_DISPLAY* display;
+extern ALLEGRO_BITMAP* image;
 
-ALLEGRO_TIMER* timer = NULL;
-ALLEGRO_EVENT_QUEUE* queue = NULL;
-ALLEGRO_EVENT event;
+extern ALLEGRO_TIMER* timer;
+extern ALLEGRO_EVENT_QUEUE* queue;
+
 
 // Font defs - we have our own ttf BTW
-ALLEGRO_FONT* font = NULL;
-ALLEGRO_FONT* _Font_ELITE_1;
-ALLEGRO_FONT* _Font_ELITE_2;
-ALLEGRO_FONT* _Font_ELITE_3;
+extern ALLEGRO_FONT* font;
+extern ALLEGRO_FONT* _Font_ELITE_1;
+extern ALLEGRO_FONT* _Font_ELITE_2;
+extern ALLEGRO_FONT* _Font_ELITE_3;
+extern ALLEGRO_EVENT event;
 
 extern ALLEGRO_BITMAP* scanner_image;
+extern ALLEGRO_BITMAP* gfx_screen;
 
 
 /*
@@ -186,13 +188,16 @@ void move_cross (int dx, int dy)
 
 void draw_cross (int cx, int cy)
 {
+	printf("Drawing red cross %d,%d\n",cx,cy);
 	if (current_screen == SCR_SHORT_RANGE)
 	{
 		gfx_set_clip_region (1, 37, 510, 339);
-		//xor_mode (true);
+		xor_mode (true);
+		
 		gfx_draw_colour_line (cx - 16, cy, cx + 16, cy, GFX_COL_RED);
 		gfx_draw_colour_line (cx, cy - 16, cx, cy + 16, GFX_COL_RED);
-		//xor_mode (false);
+		xor_mode (false);
+		
 		gfx_set_clip_region (1, 1, 510, 383);
 		return;
 	}
@@ -200,10 +205,10 @@ void draw_cross (int cx, int cy)
 	if (current_screen == SCR_GALACTIC_CHART)
 	{
 		gfx_set_clip_region (1, 37, 510, 293);
-		//xor_mode (true);
+		xor_mode (true);
 		gfx_draw_colour_line (cx - 8, cy, cx + 8, cy, GFX_COL_RED);
 		gfx_draw_colour_line (cx, cy - 8, cx, cy + 8, GFX_COL_RED);
-		//xor_mode (false);
+		xor_mode (false);
 		gfx_set_clip_region (1, 1, 510, 383);
 	}
 }
@@ -826,6 +831,7 @@ void handle_flight_keys (int keyCode)
 
 	if (kbd_F6_pressed)
 	{
+		printf("Pressed F6\n");
 		find_input = 0;
 		old_cross_x = -1;
 		display_short_range_chart();
@@ -1421,7 +1427,7 @@ int main(int argc, char** argv)
 	finish = 0;
 	auto_pilot = 0;
 
-	timer = al_create_timer(1.0 / 30.0);
+	timer = al_create_timer(1.0 / 21.0);
 	queue = al_create_event_queue();
 
 
@@ -1461,9 +1467,7 @@ int main(int argc, char** argv)
 			//snd_update_sound();
 			//gfx_update_screen();
 
-			// TODO - need to put this into some kind of size thing
-			gfx_set_clip_region(1, 1, 510, 383);
-
+			
 			rolling = 0;
 			climbing = 0;
 
@@ -1482,15 +1486,15 @@ int main(int argc, char** argv)
 			
 			if ((event.type == ALLEGRO_EVENT_KEY_DOWN) || (event.type == ALLEGRO_EVENT_DISPLAY_CLOSE))
 			{
-				printf("Key Down: %d\n", event.keyboard.keycode);
-				handle_flight_keys(event.keyboard.keycode);
+				//printf("Key Down: %d\n", event.keyboard.keycode);
+				//handle_flight_keys(event.keyboard.keycode);
 				continue;
 				//break;
 			}
 			else if ((event.type == ALLEGRO_EVENT_KEY_CHAR) )
 			{
-				printf("Char %d\n", event.keyboard.keycode);
-				handle_flight_keys(event.keyboard.keycode);
+				//printf("Char %d\n", event.keyboard.keycode);
+				//handle_flight_keys(event.keyboard.keycode);
 				//continue;
 				//break;
 			}
@@ -1507,8 +1511,22 @@ int main(int argc, char** argv)
 			if (redraw && al_is_event_queue_empty(queue))
 			{
 			
+				// Set the memory bitmap for all drawing ops on this refresh cycle
+				//al_set_target_bitmap(gfx_screen);
+
+				// TODO - need to put this into some kind of size thing
+				gfx_set_clip_region(1, 1, 510, 383);
+
 				redraw = false;
+				//al_lock_bitmap(al_get_target_bitmap(), ALLEGRO_PIXEL_FORMAT_ANY, ALLEGRO_LOCK_WRITEONLY); // The current target bitmap is the display back buffer
+				//al_lock_bitmap(al_get_targetbitmap(display), ALLEGRO_PIXEL_FORMAT_ANY, ALLEGRO_LOCK_READWRITE);
+			
 				
+				handle_flight_keys(0);
+				int flags = 0;
+				al_draw_bitmap(scanner_image, GFX_X_OFFSET, 385 + GFX_Y_OFFSET, flags);
+				//blit (scanner_image, gfx_screen, 0, 0, GFX_X_OFFSET, 385+GFX_Y_OFFSET, sw, sh);
+
 				gfx_draw_line(0, 0, 0, 384);
 				gfx_draw_line(0, 0, 511, 0);
 				gfx_draw_line(511, 0, 511, 384);
@@ -1635,10 +1653,42 @@ int main(int argc, char** argv)
 					}
 				}
 
+				if (current_screen == SCR_SHORT_RANGE) {
+
+					if ((cross_x != old_cross_x) ||	(cross_y != old_cross_y))
+					{
+						if (old_cross_x != -1)
+							draw_cross(old_cross_x, old_cross_y);
+
+						old_cross_x = cross_x;
+						old_cross_y = cross_y;
+
+						draw_cross(old_cross_x, old_cross_y);
+					}
+					
+					
+
+				}
+				if (current_screen == SCR_GALACTIC_CHART) {
+					
+					if ((cross_x != old_cross_x) || (cross_y != old_cross_y))
+					{
+						if (old_cross_x != -1)
+							draw_cross(old_cross_x, old_cross_y);
+
+						old_cross_x = cross_x;
+						old_cross_y = cross_y;
+
+						draw_cross(old_cross_x, old_cross_y);
+					}
+				}
+				
+
+				/*
 				if ((cross_x != old_cross_x) ||
 					(cross_y != old_cross_y))
 				{
-					if (old_cross_x != -1)
+					if (old_cross_x != -1) 
 						draw_cross(old_cross_x, old_cross_y);
 
 					old_cross_x = cross_x;
@@ -1646,9 +1696,15 @@ int main(int argc, char** argv)
 
 					draw_cross(old_cross_x, old_cross_y);
 				}
+				*/
 			}
 
+			
+			al_set_target_bitmap(al_get_backbuffer(display));
+			//al_draw_bitmap(gfx_screen, 0, 0, 0);
 			al_flip_display();
+			//al_unlock_bitmap(al_get_target_bitmap());
+			
 			redraw = false;
 		}
 

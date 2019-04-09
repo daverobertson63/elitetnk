@@ -27,6 +27,7 @@
 #include "threed.h"
 #include "space.h"
 #include "random.h"
+#include "../packages/Allegro.5.1.12.4/build/native/include/allegro5/color.h"
 
 #define MAX(x,y) (((x) > (y)) ? (x) : (y))
 
@@ -352,22 +353,22 @@ int snes_planet_colour[] =
 {
 	102, 102,
 	134, 134, 134, 134,
-	167, 167, 167, 167,
-	213, 213,
-	255,
+	134, 134, 134, 134,
+	13, 13,
+	55,
 	83,83,83,83,
 	122,
 	83,83,
-	249,249,249,249, 
+	49,49,49,49, 
 	83,
 	122,
-	249,249,249,249,249,249,
+	49,49,49,49,49,49,
 	83, 83,
 	122,
 	83,83, 83, 83,
-	255,
-	213, 213,
-	167,167, 167, 167,
+	55,
+	13, 13,
+	67,67, 67, 67,
 	134,134, 134, 134,
 	102, 102
 }; 
@@ -552,9 +553,9 @@ void render_planet_line (int xo, int yo, int x, int y, int radius, int vx, int v
 
 	sy = y + yo;
 	
-	if ((sy < GFX_VIEW_TY + GFX_Y_OFFSET) ||
-		(sy > GFX_VIEW_BY + GFX_Y_OFFSET))
-		return;
+	//if ((sy < GFX_VIEW_TY + GFX_Y_OFFSET) ||
+	//	(sy > GFX_VIEW_BY + GFX_Y_OFFSET))
+	//	return;
 					   
 	sx = xo - x;
 	ex = xo + x;
@@ -568,7 +569,7 @@ void render_planet_line (int xo, int yo, int x, int y, int radius, int vx, int v
 		
 	for (; sx <= ex; sx++)
 	{
-		if ((sx >= (GFX_VIEW_TX + GFX_X_OFFSET)) && (sx <= (GFX_VIEW_BX + GFX_X_OFFSET)))
+		//if ((sx >= (GFX_VIEW_TX + GFX_X_OFFSET)) && (sx <= (GFX_VIEW_BX + GFX_X_OFFSET)))
 		{
 			lx = rx / div;
 			ly = ry / div;
@@ -593,6 +594,8 @@ void render_planet (int xo, int yo, int radius, struct vector *vec)
 	int s;
 	int vx,vy;
 
+
+
 	xo += GFX_X_OFFSET;
 	yo += GFX_Y_OFFSET;
 	
@@ -603,6 +606,7 @@ void render_planet (int xo, int yo, int radius, struct vector *vec)
 	x = radius;
 	y = 0;
 
+	al_lock_bitmap(al_get_target_bitmap(), ALLEGRO_PIXEL_FORMAT_ANY, 0);
 	s -= x + x;
 	while (y <= x)
 	{
@@ -619,6 +623,8 @@ void render_planet (int xo, int yo, int radius, struct vector *vec)
 			x--;
 		}				
 	}
+	al_unlock_bitmap(al_get_target_bitmap());
+
 }
 
 
@@ -760,6 +766,7 @@ void render_sun (int xo, int yo, int radius)
 	s = -radius;
 	x = radius;
 	y = 0;
+	al_lock_bitmap(al_get_target_bitmap(), ALLEGRO_PIXEL_FORMAT_ANY, 0);
 
 	// s -= x + x;
 	while (y <= x)
@@ -777,6 +784,8 @@ void render_sun (int xo, int yo, int radius)
 			x--;
 		}				
 	}
+	al_unlock_bitmap(al_get_target_bitmap());
+
 }
 
 
@@ -936,6 +945,8 @@ void draw_explosion (struct univ_object *univ)
 	old_seed = get_rand_seed();
 	set_rand_seed (univ->exp_seed);
 
+	al_lock_bitmap(al_get_target_bitmap(), ALLEGRO_PIXEL_FORMAT_ANY, 0);
+
 	for (cnt = 0; cnt < np; cnt++)
 	{
 		sx = point_list[cnt].x;
@@ -960,6 +971,7 @@ void draw_explosion (struct univ_object *univ)
 					gfx_plot_pixel (px+psx, py+psy, GFX_COL_WHITE);
 		}
 	}
+	al_unlock_bitmap(al_get_target_bitmap());
 
 	set_rand_seed (old_seed);
 }
