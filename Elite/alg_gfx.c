@@ -553,7 +553,8 @@ void gfx_clear_display (void)
 void gfx_clear_text_area (void)
 {
 	ALLEGRO_COLOR colName = al_color_name(EliteColors[GFX_COL_BLACK]);
-	al_draw_filled_rectangle(GFX_X_OFFSET + 1, GFX_Y_OFFSET + 340, 510 + GFX_X_OFFSET, 383 + GFX_Y_OFFSET, colName, 0);
+	
+	al_draw_filled_rectangle(GFX_X_OFFSET + 1, GFX_Y_OFFSET + 340, 510 + GFX_X_OFFSET, 383 + GFX_Y_OFFSET, colName, -0.1f);
 
 	//rectfill (gfx_screen, GFX_X_OFFSET + 1, GFX_Y_OFFSET + 340, 510 + GFX_X_OFFSET, 383 + GFX_Y_OFFSET, GFX_COL_BLACK);
 }
@@ -561,17 +562,34 @@ void gfx_clear_text_area (void)
 
 void gfx_clear_area (int tx, int ty, int bx, int by)
 {
-	ALLEGRO_COLOR colName = al_color_name(EliteColors[GFX_COL_BLACK]);
-	al_draw_filled_rectangle(tx + GFX_X_OFFSET, ty + GFX_Y_OFFSET, bx + GFX_X_OFFSET, by + GFX_Y_OFFSET, colName, 0);
+	
+	float x1 = tx + GFX_X_OFFSET;
+	float y1 = ty + GFX_Y_OFFSET;
+	float x2 = bx + GFX_X_OFFSET;
+	float y2 = by + GFX_Y_OFFSET;
 
+	ALLEGRO_COLOR colName = al_color_name(EliteColors[GFX_COL_BLACK]);
+	printf("clear %d,%d %d,%d\n", tx, ty, bx, by);
+	
+	//al_draw_filled_rectangle((float)tx + GFX_X_OFFSET, (float)ty + GFX_Y_OFFSET, bx + GFX_X_OFFSET, by + GFX_Y_OFFSET, colName, -0.1f);
+
+	al_draw_filled_rectangle(x1,y1,x2,y2, colName, 1.0f);
 	//rectfill (gfx_screen, tx + GFX_X_OFFSET, ty + GFX_Y_OFFSET,  bx + GFX_X_OFFSET, by + GFX_Y_OFFSET, GFX_COL_BLACK);
 }
 
 void gfx_draw_rectangle (int tx, int ty, int bx, int by, int col)
 {
 	
+	float x1 = tx + GFX_X_OFFSET;
+	float y1 = ty + GFX_Y_OFFSET;
+	float x2 = bx + GFX_X_OFFSET;
+	float y2 = by + GFX_Y_OFFSET;
+
 	ALLEGRO_COLOR colName = al_color_name(EliteColors[col]);
-	al_draw_rectangle (tx + GFX_X_OFFSET, ty + GFX_Y_OFFSET, bx + GFX_X_OFFSET, by + GFX_Y_OFFSET, colName,0);
+	printf("rect %d,%d %d,%d\n", tx, ty, bx, by);
+	
+	al_draw_filled_rectangle(x1, y1, x2, y2, colName, 1.0f);
+	//al_draw_rectangle (tx + GFX_X_OFFSET, ty + GFX_Y_OFFSET, bx + GFX_X_OFFSET, by + GFX_Y_OFFSET, colName,0);
 }
 
 
@@ -611,6 +629,8 @@ void gfx_display_pretty_text (int tx, int ty, int bx, int by, char *txt)
 		//text_mode (-1);
 		// TODO on Text out
 		//textout (gfx_screen, 1, strbuf, tx + GFX_X_OFFSET, ty + GFX_Y_OFFSET, GFX_COL_WHITE);
+		ALLEGRO_COLOR colName = al_color_name(EliteColors[GFX_COL_WHITE]);
+		al_draw_text(_Font_ELITE_2, colName, tx + GFX_X_OFFSET, ty + GFX_Y_OFFSET, ALLEGRO_ALIGN_LEFT, strbuf);
 		ty += (8 * GFX_SCALE);
 	}
 }
@@ -833,6 +853,18 @@ void gfx_draw_sprite (int sprite_no, int x, int y)
 int gfx_request_file (char *title, char *path, char *ext)
 {
 	int okay=1;
+
+	ALLEGRO_FILECHOOSER* filechooser;
+	filechooser = al_create_native_file_dialog("C:", "Choose a file.", "*.*;*.nkc;", 1);
+	al_show_native_file_dialog(display, filechooser);
+
+	/* Actually I will not use this but leaving it here as example only*/
+	int counter = al_get_native_file_dialog_count(filechooser);
+
+	if (counter == 0) {
+		return 0;
+	}
+
 
 	//show_mouse (screen);
 	//okay = file_select (title, path, ext);

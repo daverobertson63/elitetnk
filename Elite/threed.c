@@ -489,7 +489,8 @@ void generate_fractal_landscape (int rnd_seed)
 	
 	for (y = 0; y <= LAND_Y_MAX; y += d)
 		for (x = 0; x <= LAND_X_MAX; x += d)
-			landscape[x][y] = randint() & 255;
+			// TODO - colour needs resetting here 
+			landscape[x][y] = randint() & 128;
 
 	for (y = 0; y < LAND_Y_MAX; y += d)
 		for (x = 0; x < LAND_X_MAX; x += d)	

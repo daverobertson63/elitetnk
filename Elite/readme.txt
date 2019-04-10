@@ -2,12 +2,12 @@ Elite - The New Kind   Release 1.2
 --------------------   -----------
 
 Original Revision date: 22 July 2001
-Original Revision date: 09 April 2019
+Allegro 5 Updates Revision date: 09 April 2019
 
 This is based on the release 1.0 of Elite - The New Kind.
 For changes since previous releases see below.
 
-I've updated a bunch of things to cope with aLlegro 5 - the original was based on Allegro 4.
+I've updated a bunch of things to cope with Allegro 5 - the original was based on Allegro 4.
 
 For the original info - refer back to github and search for the original version.  This is a work in progress
 
@@ -89,9 +89,11 @@ polygons.  Not sure this is the best way.
 
 - Colour pallete uses some web colours - this could be better
 
-- Music is not working
+- Music is not working yet
 
 - Red cross on charts doesnt work on XOR mode properly
+
+- Keyboard slelection is too fast - better key events are needed
 
 - Lots of other things
 

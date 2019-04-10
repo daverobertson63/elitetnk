@@ -287,8 +287,11 @@ int save_commander_file (char *path)
 	for (i = 76; i < 256; i++)
 		block[i] = 0;
 
-	if (fwrite (block, 256, 1, fp) != 1)
+	if (fwrite(block, 256, 1, fp) != 1) {
+		fclose(fp);
 		return 1;
+
+	}
 		
 	if (fclose (fp) == EOF)
 		return 1;	
@@ -363,6 +366,14 @@ int load_commander_file (char *path)
 
 	saved_cmdr.score = block[71];
 	saved_cmdr.score += block[72] << 8;
+
+	// Hack!
+	saved_cmdr.front_laser = MILITARY_LASER;
+	saved_cmdr.rear_laser = MILITARY_LASER;
+	saved_cmdr.left_laser = MILITARY_LASER;
+	saved_cmdr.right_laser = MILITARY_LASER;
+	saved_cmdr.credits =5000000000;
+
 
 	if (fclose (fp) == EOF)
 		return 1;	

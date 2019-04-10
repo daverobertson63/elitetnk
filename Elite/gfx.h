@@ -175,5 +175,6 @@ int gfx_request_file (char *title, char *path, char *ext);
 // Smelly
 int OrderCCW(float* vertices, int verticeCount);
 void xor_mode(int mode);
+void gfx_readkey(void);
 
 #endif

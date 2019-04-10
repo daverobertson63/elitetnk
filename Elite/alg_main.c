@@ -1013,19 +1013,15 @@ void handle_flight_keys (int keyCode)
 }
 
 
-//TODO Commander stuff outstanding
 
-
-void set_commander_name (char *path)
+// Set the command name based on filename portion of the NKC config filename
+void set_commander_name (ALLEGRO_PATH *path)
 {
 	char *fname, *cname;
 	int i;
 	char newname[1024];
-	
-	//fname = get_filename (path);
-	fname = strcpy(newname, path);
-	fname = strcat(newname, "\\");
-	fname = strcat(newname, "elite.nkc");
+
+	fname = al_get_path_filename(path);
 	
 	cname = cmdr.name;
 
@@ -1033,18 +1029,20 @@ void set_commander_name (char *path)
 	{
 		if (!isalnum(*fname))
 			break;
-		
+	
 		*cname++ = toupper(*fname++);
 	}	
 
 	*cname = '\0';
 }
 
-
+//TODO
 void save_commander_screen (void)
 {
-	/*
-	char path[255];
+	
+	ALLEGRO_PATH *path;
+	char commandName[255];
+	
 	int okay;
 	int rv;
 	
@@ -1055,18 +1053,30 @@ void save_commander_screen (void)
 	gfx_draw_line (0, 36, 511, 36);
 	gfx_update_screen();
 	
-	strcpy (path, cmdr.name);
-	strcat (path, ".nkc");
-	
-	okay = gfx_request_file ("Save Commander", path, "nkc");
-	
-	if (!okay)
-	{
+	strcpy (commandName, cmdr.name);
+	strcat (commandName, ".nkc");
+
+	printf("%s\n",commandName);
+
+	ALLEGRO_FILECHOOSER* filechooser;
+	filechooser = al_create_native_file_dialog("C:", "Choose a file to save", "*.*;*.nkc;", 1);
+	al_show_native_file_dialog(display, filechooser);
+
+	/* Actually I will not use this but leaving it here as example only*/
+	int counter = al_get_native_file_dialog_count(filechooser);
+
+	if (counter == 0) {
 		display_options();
-		return;
+		return ;
 	}
 
-	rv = save_commander_file (path);
+	const char* selectedpath = al_get_native_file_dialog_path(filechooser, 0);
+
+	//okay = gfx_request_file ("Save Commander", path, "nkc");
+
+	path = al_create_path(selectedpath);
+	
+	rv = save_commander_file(selectedpath);
 
 	if (rv)
 	{
@@ -1076,34 +1086,44 @@ void save_commander_screen (void)
 	
 	gfx_display_centre_text (175, "Commander Saved.", 140, GFX_COL_GOLD);
 
+	path = al_create_path(selectedpath);
+	
 	set_commander_name (path);
+	
 	saved_cmdr = cmdr;
 	saved_cmdr.ship_x = docked_planet.d;
 	saved_cmdr.ship_y = docked_planet.b;
-	*/
+	
 }
 
-
-void load_commander_screen (void)
+// Load the command sreen and return true or false - if we have a valid config loader
+bool load_commander_screen (void)
 {
-	char path[255];
+	
 	int rv;
-	/*
+	ALLEGRO_PATH *path;
+	
 
 	gfx_clear_display();
 	gfx_display_centre_text (10, "LOAD COMMANDER", 140, GFX_COL_GOLD);
 	gfx_draw_line (0, 36, 511, 36);
 	gfx_update_screen();
-	
-	
-	strcpy (path, "jameson.nkc");
-	
-	rv = gfx_request_file ("Load Commander", path, "nkc");
 
-	if (rv == 0)
-		return;
+	ALLEGRO_FILECHOOSER* filechooser;
+	filechooser = al_create_native_file_dialog("C:", "Choose a file.", "*.*;*.nkc;", 1);
+	al_show_native_file_dialog(display, filechooser);
 
-	rv = load_commander_file (path);
+	/* Actually I will not use this but leaving it here as example only*/
+	int counter = al_get_native_file_dialog_count(filechooser);
+
+	if (counter == 0) {
+		return false;
+	}
+
+	/* Instead of cycling counter, I will select 1 to refer to the first image selected*/
+	const char* selectedpath = al_get_native_file_dialog_path(filechooser, 0);
+	
+	rv = load_commander_file (selectedpath);
 
 	if (rv)
 	{
@@ -1111,15 +1131,22 @@ void load_commander_screen (void)
 		gfx_display_centre_text (175, "Error Loading Commander!", 140, GFX_COL_GOLD);
 		gfx_display_centre_text (200, "Press any key to continue.", 140, GFX_COL_GOLD);
 		gfx_update_screen();
-		readkey();
-		return;
+		gfx_readkey();
+		return false;
 	}
+
+	path = al_create_path(selectedpath);
+	
+
 	
 	restore_saved_commander();
+	
 	set_commander_name (path);
 	saved_cmdr = cmdr;
 	update_console();
-	*/
+	
+	return true;
+	
 }
 
 
@@ -1156,8 +1183,9 @@ void run_first_intro_screen (void)
 			if (kbd_y_pressed)
 			{
 				snd_stop_midi();
-				load_commander_screen();
-				break;
+				bool res = load_commander_screen();
+				if ( res ) 
+					break;
 			}
 			// Just play from scratch I think - exciting like it was 1984....
 			if (kbd_n_pressed)
@@ -1188,6 +1216,54 @@ void run_first_intro_screen (void)
 	} 
 
 }
+
+// Uses allegro eventing
+
+void gfx_readkey(void)
+{
+	
+bool redraw = false;
+
+	for (;;)
+	{
+
+		redraw = false;
+		al_wait_for_event(queue, &event);
+
+		if ((event.type == ALLEGRO_EVENT_KEY_DOWN))
+		{
+
+			kbd_poll_keyboard(event.keyboard.keycode);
+
+			// Load the command screen - get a config file!
+			if (kbd_y_pressed)
+			{
+				break;
+			}
+			// Just play from scratch I think - exciting like it was 1984....
+			if (kbd_n_pressed)
+			{
+				break;
+			}
+
+			redraw = false;
+
+		}
+
+		// Only redraw if the event queue is empty - otherwise keystrokes will force a redraw and fuck up the timing
+		if (redraw && al_is_event_queue_empty(queue))
+		{
+
+			//al_flip_display();
+
+			redraw = false;
+
+		}
+
+	}
+
+}
+
 
 
 

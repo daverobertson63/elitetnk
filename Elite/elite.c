@@ -87,7 +87,7 @@ struct commander saved_cmdr =
 	0,											/* Galactic H'Drive	*/
 	0,											/* Escape Pod		*/
 	0,0,0,0,
-	3,											/* No. of Missiles	*/
+	6,											/* No. of Missiles	*/
 	0,											/* Legal Status		*/
 	{0x10, 0x0F, 0x11, 0x00, 0x03, 0x1C,		/* Station Stock	*/
 	 0x0E, 0x00, 0x00, 0x0A, 0x00, 0x11,

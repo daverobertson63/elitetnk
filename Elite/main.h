@@ -1,3 +1,4 @@
+#include <stdbool.h>
 /*
  * Elite - The New Kind.
  *
@@ -17,7 +18,7 @@
 
 void info_message (char *message);
 void save_commander_screen (void);
-void load_commander_screen (void);
+bool load_commander_screen (void);
 void update_screen (void);
 
 

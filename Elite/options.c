@@ -289,6 +289,7 @@ void highlight_option (int i)
 		x = GFX_X_CENTRE - (OPTION_BAR_WIDTH / 2);
 		y = (384 - (30 * NUM_OPTIONS)) / 2;
 		y += hilite_item * 30;
+
 		gfx_clear_area (x, y, x + OPTION_BAR_WIDTH, y + OPTION_BAR_HEIGHT);
 		display_option_item (hilite_item);		
 	}
@@ -297,8 +298,7 @@ void highlight_option (int i)
 	y = (384 - (30 * NUM_OPTIONS)) / 2;
 	y += i * 30;
 	
-	gfx_draw_rectangle (x, y, x + OPTION_BAR_WIDTH, y + OPTION_BAR_HEIGHT,
-						GFX_COL_DARK_RED);
+	gfx_draw_rectangle (x, y, x + OPTION_BAR_WIDTH, y + OPTION_BAR_HEIGHT,GFX_COL_DARK_RED);
 	display_option_item (i);		
 
 	hilite_item = i;
@@ -319,6 +319,7 @@ void select_next_option (void)
 
 void do_option (void)
 {
+	bool res = false;
 	if ((!docked) && option_list[hilite_item].docked_only)
 		return;
 
@@ -329,7 +330,7 @@ void do_option (void)
 			break;
 			
 		case 1:
-			load_commander_screen();
+			res = load_commander_screen();
 			display_commander_status();
 			break;
 		
